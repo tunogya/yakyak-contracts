@@ -13,8 +13,7 @@ contract YakYakPoints is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeab
     constructor() initializer {}
 
     struct EXCHANGE_ORDER {
-        string _ciphertext;     // The ciphertext need to be verified;
-        uint256 _amount;        // The amount of Yak Yak Points;
+        uint256 _amount;        // The amount of Yak Yak Points reward;
         address _exchanger;     // If had exchanged, will record the exchanger;
     }
 
@@ -37,9 +36,11 @@ contract YakYakPoints is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeab
     override
     {}
 
-    function newExchangeOrder(uint256 orderId, string memory ciphertext, uint256 amount) public onlyOwner {
-        require(_exchangeOrder[orderId]._ciphertext == "", "Yak: this id had record!");
-        _exchangeOrder[orderId]._ciphertext = ciphertext;
-        _exchangeOrder[orderId]._amount = amount;
+    // get exchange order info
+    function getExchangeOrder(uint256 id) public view returns (EXCHANGE_ORDER memory) {
+        require(_exchangeOrder[id]._exchanger != address(0), "Yak: This id hadn't been exchanged!");
+        return _exchangeOrder[id];
     }
+
+
 }
