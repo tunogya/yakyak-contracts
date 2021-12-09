@@ -12,6 +12,8 @@ contract YakYakPoints is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeab
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
+    event ExchangeAward(uint256 id, uint256 amount, address exchanger);
+
     /// @dev exchange order struct
     struct EXCHANGE_ORDER {
         uint256 amount;        // The amount of Yak Yak Points reward;
@@ -49,24 +51,27 @@ contract YakYakPoints is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeab
         return exchangeOrder[id];
     }
 
-    uint256 constant chainId = 4;
-    bytes32 constant salt = 0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558;
-    string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address,bytes32 salt)";
+    uint256 chainId = block.chainid;
+    bytes32 constant salt = 0x69eb730727732201433e50655021f58399ca006f718aea66569e0b6317a12669;
+    address verifyingContract = address(this);
+    string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address,bytes32 salt)";
     bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encode(EIP712_DOMAIN));
-    bytes32 private constant DOMAIN_SEPARATOR = keccak256(abi.encode(
+    bytes32 private DOMAIN_SEPARATOR = keccak256(abi.encode(
             EIP712_DOMAIN_TYPEHASH,
             keccak256("Yak Yak Points"),
             keccak256("1"),
             chainId,
+            verifyingContract,
             salt
         ));
 
     bytes32 constant POINTS_AWARD_TYPEHASH = keccak256("POINTS_AWARD(uint256 id, uint256 amount)");
 
-    function hashPointsAward(POINTS_AWARD memory pointsAward) public pure returns (bytes32 hash) {
-        return keccak256(abi.encode(
+    function _hashPointsAward(POINTS_AWARD memory pointsAward) internal view returns (bytes32 hash) {
+        return keccak256(abi.encodePacked(
+                "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encodePacked(
+                keccak256(abi.encode(
                         POINTS_AWARD_TYPEHASH,
                         pointsAward.id,
                         pointsAward.amount
@@ -74,7 +79,18 @@ contract YakYakPoints is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeab
             ));
     }
 
-    function verify(address signer, POINTS_AWARD memory pointsAward, bytes32 sigR, bytes32 sigS, uint8 sigV) public pure returns (bool) {
-        return signer == ecrecover(hashPointsAward(pointsAward), sigV, sigR, sigS);
+    function _decode(POINTS_AWARD memory pointsAward, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (address) {
+        return ecrecover(_hashPointsAward(pointsAward), sigV, sigR, sigS);
+    }
+
+    function exchangeAward(POINTS_AWARD memory pointsAward, bytes32 sigR, bytes32 sigS, uint8 sigV) public {
+        require(exchangeOrder[pointsAward.id].exchanger == address(0), "Yak: This award had been exchanged!");
+        require(_decode(pointsAward, sigR, sigS, sigV) == owner(), "Yak: This sig is not valid!");
+
+        exchangeOrder[pointsAward.id].amount = pointsAward.amount;
+        exchangeOrder[pointsAward.id].exchanger = msg.sender;
+
+        _mint(msg.sender, pointsAward.amount);
+        emit ExchangeAward(pointsAward.id, pointsAward.amount, msg.sender);
     }
 }
