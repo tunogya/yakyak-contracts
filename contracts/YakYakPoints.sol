@@ -1,96 +1,72 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20FlashMint.sol";
 
-/// @custom:security-contact tunogya@qq.cn
-contract YakYakPoints is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+/// @custom:security-contact tunogya@qq.com
+contract YakYakPoints is ERC20, ERC20Burnable, ERC20Snapshot, AccessControl, Pausable, ERC20Permit, ERC20Votes, ERC20FlashMint {
+    bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    event ExchangeAward(uint256 id, uint256 amount, address exchanger);
-
-    /// @dev exchange order struct
-    struct EXCHANGE_ORDER {
-        uint256 amount;        // The amount of Yak Yak Points reward;
-        address exchanger;     // If had exchanged, will record the exchanger;
+    constructor() ERC20("Yak Yak Points", "Yak") ERC20Permit("Yak Yak Points") {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(SNAPSHOT_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
     }
 
-    /// @dev map of exchange order
-    mapping(uint256=>EXCHANGE_ORDER) exchangeOrder;
-
-    struct POINTS_AWARD {
-        uint256 id;
-        uint256 amount;
+    function snapshot() public onlyRole(SNAPSHOT_ROLE) {
+        _snapshot();
     }
 
-    function initialize() initializer public {
-        __ERC20_init("Yak Yak Points", "Yak");
-        __ERC20Burnable_init();
-        __Ownable_init();
-        __UUPSUpgradeable_init();
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
     }
 
-    function mint(address to, uint256 amount) public onlyOwner {
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
 
-    function _authorizeUpgrade(address newImplementation)
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
     internal
-    onlyOwner
-    override
-    {}
-
-    /// @dev get exchange order info
-    function getExchangeOrder(uint256 id) public view returns (EXCHANGE_ORDER memory) {
-        require(exchangeOrder[id].exchanger != address(0), "Yak: This id hadn't been exchanged!");
-        return exchangeOrder[id];
+    whenNotPaused
+    override(ERC20, ERC20Snapshot)
+    {
+        super._beforeTokenTransfer(from, to, amount);
     }
 
-    uint256 chainId = block.chainid;
-    bytes32 constant salt = 0x69eb730727732201433e50655021f58399ca006f718aea66569e0b6317a12669;
-    address verifyingContract = address(this);
-    string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address,bytes32 salt)";
-    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encode(EIP712_DOMAIN));
-    bytes32 private DOMAIN_SEPARATOR = keccak256(abi.encode(
-            EIP712_DOMAIN_TYPEHASH,
-            keccak256("Yak Yak Points"),
-            keccak256("1"),
-            chainId,
-            verifyingContract,
-            salt
-        ));
+    // The following functions are overrides required by Solidity.
 
-    bytes32 constant POINTS_AWARD_TYPEHASH = keccak256("POINTS_AWARD(uint256 id, uint256 amount)");
-
-    function _hashPointsAward(POINTS_AWARD memory pointsAward) internal view returns (bytes32 hash) {
-        return keccak256(abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR,
-                keccak256(abi.encode(
-                        POINTS_AWARD_TYPEHASH,
-                        pointsAward.id,
-                        pointsAward.amount
-                    ))
-            ));
+    function _afterTokenTransfer(address from, address to, uint256 amount)
+    internal
+    override(ERC20, ERC20Votes)
+    {
+        super._afterTokenTransfer(from, to, amount);
     }
 
-    function _decode(POINTS_AWARD memory pointsAward, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (address) {
-        return ecrecover(_hashPointsAward(pointsAward), sigV, sigR, sigS);
+    function _mint(address to, uint256 amount)
+    internal
+    override(ERC20, ERC20Votes)
+    {
+        super._mint(to, amount);
     }
 
-    function exchangeAward(POINTS_AWARD memory pointsAward, bytes32 sigR, bytes32 sigS, uint8 sigV) public {
-        require(exchangeOrder[pointsAward.id].exchanger == address(0), "Yak: This award had been exchanged!");
-        require(_decode(pointsAward, sigR, sigS, sigV) == owner(), "Yak: This sig is not valid!");
-
-        exchangeOrder[pointsAward.id].amount = pointsAward.amount;
-        exchangeOrder[pointsAward.id].exchanger = msg.sender;
-
-        _mint(msg.sender, pointsAward.amount);
-        emit ExchangeAward(pointsAward.id, pointsAward.amount, msg.sender);
+    function _burn(address account, uint256 amount)
+    internal
+    override(ERC20, ERC20Votes)
+    {
+        super._burn(account, amount);
     }
 }
