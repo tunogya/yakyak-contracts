@@ -6,18 +6,43 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract PrizeCashingPool is Ownable {
+interface IPrizeCashingPool {
+    // Prize cashing order
+    struct ORDER {
+        uint256 amount;
+        address casher;
+    }
+
+    // The prize cashing ticket
+    struct TICKET {
+        uint256 id;
+        uint256 amount;
+    }
+
     event Withdraw(uint256 amount);
 
+    // query EIP712 domain
+    function queryEIP712Domain() external view returns(string memory _name, string memory _version, uint256 _chainid, address _verifyingContract, bytes32 _salt);
+    // Withdraw token from contract
+    function withdraw(address _to, uint256 _amount) external;
+    // Query the prize cashing order
+    function queryOrder(uint256 _id) external view returns (ORDER memory order);
+    // hash ticket
+    function hashTicket(TICKET memory _ticket) external view returns (bytes32 hash);
+    // verify ticket
+    function verifyTicket(TICKET memory _ticket, uint256 _signature) external view returns(address);
+}
+
+contract PrizeCashingPool is Ownable, IPrizeCashingPool {
     // The token to be cashed
     ERC20 public token;
 
     // Used to EIP712 domain
-    string public name;
-    string public version;
-    uint256 public chainid;
-    address public verifyingContract;
-    bytes32 public salt;
+    string name;
+    string version;
+    uint256 chainid;
+    address verifyingContract;
+    bytes32 salt;
 
     constructor (address _tokenAddress, string memory _name, string memory _version, bytes32 _salt) {
         token = ERC20(_tokenAddress);
@@ -28,36 +53,25 @@ contract PrizeCashingPool is Ownable {
         salt = _salt;
     }
 
-    function queryEIP712Domain() public view returns(string memory name, string memory version, uint256 chainid, address verifyingContract, bytes32 salt) {
+    // query EIP712 domain
+    function queryEIP712Domain() public override view returns(string memory _name, string memory _version, uint256 _chainid, address _verifyingContract, bytes32 _salt) {
         return (name, version, chainid, verifyingContract, salt);
     }
 
     // Withdraw token from contract
-    function withdraw(address _to, uint256 _amount) public onlyOwner {
+    function withdraw(address _to, uint256 _amount) public override onlyOwner {
         uint256 balance = token.balanceOf(address(this));
         require(_amount <= balance, "Pool: Sorry, pool balance is low!");
         token.transferFrom(address(this), _to, _amount);
         emit Withdraw(_amount);
     }
 
-    // Prize cashing order
-    struct ORDER {
-        uint256 amount;
-        address casher;
-    }
-
     // Map of prize cashing orders
     mapping(uint256=> ORDER) orders;
 
     // Query the prize cashing order
-    function queryOrder(uint256 _id) public view returns (ORDER memory order) {
+    function queryOrder(uint256 _id) public override view returns (ORDER memory order) {
         return orders[_id];
-    }
-
-    // The prize cashing ticket
-    struct TICKET {
-        uint256 id;
-        uint256 amount;
     }
 
     // The typehash of PRIZE CASHING TICKET
@@ -75,7 +89,8 @@ contract PrizeCashingPool is Ownable {
         salt
     ));
 
-    function hashTicket(TICKET memory _ticket) public view returns (bytes32 hash) {
+    // hash ticket
+    function hashTicket(TICKET memory _ticket) public override view returns (bytes32 hash) {
         return keccak256(abi.encodePacked(
             "\x19\x01",
             DOMAIN_SEPARATOR,
@@ -87,7 +102,8 @@ contract PrizeCashingPool is Ownable {
         ));
     }
 
-    function verifyTicket(TICKET memory _ticket, uint256 _signature) public view returns(address) {
+    // verify ticket
+    function verifyTicket(TICKET memory _ticket, uint256 _signature) public override view returns(address) {
         // @Todo encode r, s, v from _signature
         bytes32 r;
         bytes32 s;
