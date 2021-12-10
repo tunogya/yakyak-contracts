@@ -41,58 +41,58 @@ contract PrizeCashingPool is Ownable {
     }
 
     // Prize cashing order
-    struct PRIZE_CASHING_ORDER {
+    struct ORDER {
         uint256 amount;
         address casher;
     }
 
     // Map of prize cashing orders
-    mapping(uint256=>PRIZE_CASHING_ORDER) prizeCashingOrders;
+    mapping(uint256=> ORDER) orders;
 
     // Query the prize cashing order
-    function queryPrizeCashingOrder(uint256 id) public view returns (PRIZE_CASHING_ORDER memory) {
-        return prizeCashingOrders[id];
+    function queryOrder(uint256 id) public view returns (ORDER memory) {
+        return orders[id];
     }
 
     // The prize cashing ticket
-    struct PRIZE_CASHING_TICKET {
+    struct TICKET {
         uint256 id;
         uint256 amount;
     }
 
-    // The typehash of PRIZE_CASHING_TICKET
-    bytes32 constant PRIZE_CASHING_TICKET_TYPEHASH = keccak256("PRIZE_CASHING_TICKET(uint256 id, uint256 amount)");
+    // The typehash of PRIZE CASHING TICKET
+    bytes32 constant TICKET_TYPEHASH = keccak256("TICKET(uint256 id, uint256 amount)");
 
-    string public constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address,bytes32 salt)";
+    string public constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
     bytes32 public constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encode(EIP712_DOMAIN));
 
     bytes32 public DOMAIN_SEPARATOR = keccak256(abi.encode(
         EIP712_DOMAIN_TYPEHASH,
-        keccak256(name),
-        keccak256(version),
+        keccak256(abi.encode(name)),
+        keccak256(abi.encode(version)),
         chainid,
         verifyingContract,
         salt
     ));
 
-    function hashPrizeCashingInfo(PRIZE_CASHING_TICKET memory _prizeCashingTicket) internal view returns (bytes32 hash) {
+    function hashTicket(TICKET memory _ticket) internal view returns (bytes32 hash) {
         return keccak256(abi.encodePacked(
             "\x19\x01",
             DOMAIN_SEPARATOR,
             keccak256(abi.encode(
-                PRIZE_CASHING_TICKET_TYPEHASH,
-                _prizeCashingTicket.id,
-                _prizeCashingTicket.amount
+                TICKET_TYPEHASH,
+                _ticket.id,
+                _ticket.amount
             ))
         ));
     }
 
-    function verify(PRIZE_CASHING_TICKET memory _prizeCashingTicket, uint256 _signature) public view returns(address) {
+    function verifyTicket(TICKET memory _ticket, uint256 _signature) public view returns(address) {
         // @Todo encode r, s, v from _signature
         bytes32 r;
         bytes32 s;
         uint8 v;
 
-        return ecrecover(hashPrizeCashingInfo(_prizeCashingTicket), v, r, s);
+        return ecrecover(hashTicket(_ticket), v, r, s);
     }
 }
