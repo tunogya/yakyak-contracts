@@ -19,25 +19,25 @@ contract PrizeCashingPool is Ownable {
     address public verifyingContract;
     bytes32 public salt;
 
-    constructor (address _tokenAddress, string memory _name, string memory _version, address _verifyingContract, bytes32 _salt) {
+    constructor (address _tokenAddress, string memory _name, string memory _version, bytes32 _salt) {
         token = ERC20(_tokenAddress);
         name = _name;
         version = _version;
         chainid = block.chainid;
-        verifyingContract = _verifyingContract;
+        verifyingContract = address(this);
         salt = _salt;
     }
 
+    function queryEIP712Domain() public view returns(string memory name, string memory version, uint256 chainid, address verifyingContract, bytes32 salt) {
+        return (name, version, chainid, verifyingContract, salt);
+    }
+
     // Withdraw token from contract
-    function withdraw(address to, uint256 amount) public onlyOwner {
+    function withdraw(address _to, uint256 _amount) public onlyOwner {
         uint256 balance = token.balanceOf(address(this));
-        if (amount <= balance){
-            token.transferFrom(address(this), to, amount);
-            emit Withdraw(amount);
-        } else {
-            token.transferFrom(address(this), to, balance);
-            emit Withdraw(balance);
-        }
+        require(_amount <= balance, "Pool: Sorry, pool balance is low!");
+        token.transferFrom(address(this), _to, _amount);
+        emit Withdraw(_amount);
     }
 
     // Prize cashing order
@@ -50,8 +50,8 @@ contract PrizeCashingPool is Ownable {
     mapping(uint256=> ORDER) orders;
 
     // Query the prize cashing order
-    function queryOrder(uint256 id) public view returns (ORDER memory) {
-        return orders[id];
+    function queryOrder(uint256 _id) public view returns (ORDER memory order) {
+        return orders[_id];
     }
 
     // The prize cashing ticket
@@ -63,8 +63,8 @@ contract PrizeCashingPool is Ownable {
     // The typehash of PRIZE CASHING TICKET
     bytes32 constant TICKET_TYPEHASH = keccak256("TICKET(uint256 id, uint256 amount)");
 
-    string public constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
-    bytes32 public constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encode(EIP712_DOMAIN));
+    string constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
+    bytes32 constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encode(EIP712_DOMAIN));
 
     bytes32 public DOMAIN_SEPARATOR = keccak256(abi.encode(
         EIP712_DOMAIN_TYPEHASH,
@@ -75,7 +75,7 @@ contract PrizeCashingPool is Ownable {
         salt
     ));
 
-    function hashTicket(TICKET memory _ticket) internal view returns (bytes32 hash) {
+    function hashTicket(TICKET memory _ticket) public view returns (bytes32 hash) {
         return keccak256(abi.encodePacked(
             "\x19\x01",
             DOMAIN_SEPARATOR,
