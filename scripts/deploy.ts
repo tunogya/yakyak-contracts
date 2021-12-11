@@ -14,10 +14,10 @@ async function main() {
     (await deployer.getBalance()).toString(),
     "\n"
   );
-  const YakYakPoints = await ethers.getContractFactory("YakYakPoints");
-  const yakYakPoints = await YakYakPoints.deploy();
-  await yakYakPoints.deployed();
-  console.log("yakYakPoints deployed to:", yakYakPoints.address);
+  const YakYakRewards = await ethers.getContractFactory("YakYakRewards");
+  const yakYakRewards = await YakYakRewards.deploy();
+  await yakYakRewards.deployed();
+  console.log("YakYak® Rewards deployed to:", yakYakRewards.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
