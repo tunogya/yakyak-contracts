@@ -3,10 +3,9 @@
 // The winner can cash the prize by himself in the contract.
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-interface IPrizeCashingPool {
+interface IYakYakBank {
     // Prize cashing order
     struct ORDER {
         uint256 amount;
@@ -19,21 +18,24 @@ interface IPrizeCashingPool {
         uint256 amount;
     }
 
-    event Withdraw(uint256 amount);
+    event Withdraw(address account, uint256 amount);
+    event Deposit(address account, uint256 amount);
 
     // query EIP712 domain
     function queryEIP712Domain() external view returns(string memory _name, string memory _version, uint256 _chainid, address _verifyingContract, bytes32 _salt);
+    // Deposit token into contract
+    function deposit(uint256 _amount) external;
     // Withdraw token from contract
     function withdraw(address _to, uint256 _amount) external;
     // Query the prize cashing order
-    function queryOrder(uint256 _id) external view returns (ORDER memory order);
+    function queryOrder(address _account, uint256 _id) external view returns (ORDER memory order);
     // hash ticket
     function hashTicket(TICKET memory _ticket) external view returns (bytes32 hash);
     // verify ticket
     function verifyTicket(TICKET memory _ticket, uint256 _signature) external view returns(address);
 }
 
-contract PrizeCashingPool is Ownable, IPrizeCashingPool {
+contract YakYakBank is IYakYakBank {
     // The token to be cashed
     ERC20 public token;
 
@@ -58,20 +60,31 @@ contract PrizeCashingPool is Ownable, IPrizeCashingPool {
         return (name, version, chainid, verifyingContract, salt);
     }
 
-    // Withdraw token from contract
-    function withdraw(address _to, uint256 _amount) public override onlyOwner {
-        uint256 balance = token.balanceOf(address(this));
-        require(_amount <= balance, "Pool: Sorry, pool balance is low!");
-        token.transferFrom(address(this), _to, _amount);
-        emit Withdraw(_amount);
+    // Balance of user's vault
+    mapping(address => uint256) balance;
+
+    // Deposit token into contract
+    function deposit(uint256 _amount) public override {
+        require(_amount <= token.balanceOf(msg.sender), "Bank: Sorry, your balance is low!");
+        token.transfer(address(this), _amount);
+        balance[msg.sender] += _amount;
+        emit Deposit(msg.sender, _amount);
     }
 
-    // Map of prize cashing orders
-    mapping(uint256=> ORDER) orders;
+    // Withdraw token from user's balance
+    function withdraw(address _to, uint256 _amount) public override {
+        require(_amount <= balance[msg.sender], "Bank: Sorry, your balance is low!");
+        balance[msg.sender] -= _amount;
+        token.transferFrom(address(this), _to, _amount);
+        emit Withdraw(msg.sender, _amount);
+    }
+
+    // Map of all user prize cashing orders
+    mapping(address => mapping(uint256 => ORDER)) orders;
 
     // Query the prize cashing order
-    function queryOrder(uint256 _id) public override view returns (ORDER memory order) {
-        return orders[_id];
+    function queryOrder(address _account, uint256 _id) public override view returns (ORDER memory order) {
+        return orders[_account][_id];
     }
 
     // The typehash of PRIZE CASHING TICKET
@@ -111,4 +124,6 @@ contract PrizeCashingPool is Ownable, IPrizeCashingPool {
 
         return ecrecover(hashTicket(_ticket), v, r, s);
     }
+
+
 }
