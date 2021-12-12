@@ -45,16 +45,14 @@ contract YakYakBank is IYakYakBank {
     ERC20 public _token;
 
     // Used to EIP712 domain
-    string _name;
-    string _version;
+    string constant _name = unicode"YakYak® Bank";
+    string constant _version = "1";
     uint256 _chainid;
     address _verifyingContract;
     bytes32 _salt;
 
-    constructor (address tokenAddress_, string memory name_, string memory version_, bytes32 salt_) {
+    constructor (address tokenAddress_, bytes32 salt_) {
         _token = ERC20(tokenAddress_);
-        _name = name_;
-        _version = version_;
         _chainid = block.chainid;
         _verifyingContract = address(this);
         _salt = salt_;

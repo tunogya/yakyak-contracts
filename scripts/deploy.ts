@@ -21,19 +21,15 @@ async function main() {
   // YakYak® Rewards: 0xC9F51064022A011152B7dA6dDE44def02b5C157C
   const YakYakBank = await ethers.getContractFactory("YakYakBank");
   const yakYakRewardAddress = "0xC9F51064022A011152B7dA6dDE44def02b5C157C";
-  const yakYakBankName = "YakYakBank";
-  const yakYakBankVersion = "1";
   const yakYakBankSalt =
     "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558";
   const yakYakBank = await YakYakBank.deploy(
     yakYakRewardAddress,
-    yakYakBankName,
-    yakYakBankVersion,
     yakYakBankSalt
   );
   await yakYakBank.deployed();
   console.log("YakYak® Bank deployed to:", yakYakBank.address);
-  // YakYak® Bank: 0x808c77D8125C2b5101B5bbAAEAdce04866CcB1b7
+  // YakYak® Bank: 0x9713B119aa127bBDbA8d9AbEb51F3fFAEC8cA76d
 }
 
 // We recommend this pattern to be able to use async/await everywhere
