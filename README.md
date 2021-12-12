@@ -1,5 +1,9 @@
 # YakYak® Contracts (YakYak® 智能合约)
 
+_YakYak® Contracts_ contains a series of contracts of **YakYak® Club**.
+
+_YakYak® Contracts_ 包含一系列 **YakYak® 俱乐部** 使用的智能合约。
+
 ## YakYak® Rewards (YakYak® 权益积分)
 
 _YakYak® Rewards_ is YakYak® brand membership points. The symbol is **"YakYak®"**.
@@ -14,13 +18,13 @@ _YakYak® Bank_ 是一个使用 **YakYak® Rewards** (或其他 ERC20 代币）�
 
 Bank users can sign several cheque offline, and the cheque owner can verify the cheque, or directly withdraw the corresponding funds from the bank.
 
-银行用户可以使用线下签署若干的支票，支票拥有者可以验证支票，或直接从银行提取支票账户内对应数量的资金。
+银行用户可以线下签署若干的支票，支票拥有者可以验证支票，或直接从银行提取支票账户内对应数量的资金。
 
 ## YakYak® Ranch (YakYak® 牧场)
 
-_YakYak® Ranch_ is NFTs marketplace. You can adopt yak animal using a certain number of **YakYak® Rewards**.
+_YakYak® Ranch_ is **NFTs marketplace**. You can adopt yak animal using a certain number of **YakYak® Rewards**.
 
-_YakYak® Ranch_ 是 NFTs 交易市场。你可以使用 **YakYak® Rewards** 
+_YakYak® Ranch_ 是 **NFTs 交易市场**。你可以使用一定数量的 **YakYak® Rewards** 认养一头牛。
 
 
 
