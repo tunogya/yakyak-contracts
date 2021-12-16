@@ -19,17 +19,27 @@ async function main() {
   // await yakYakRewards.deployed();
   // console.log("YakYak® Rewards deployed to:", yakYakRewards.address);
   // YakYak® Rewards: 0xC9F51064022A011152B7dA6dDE44def02b5C157C
-  const YakYakBank = await ethers.getContractFactory("YakYakBank");
-  const yakYakRewardAddress = "0xC9F51064022A011152B7dA6dDE44def02b5C157C";
-  const yakYakBankSalt =
-    "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558";
-  const yakYakBank = await YakYakBank.deploy(
-    yakYakRewardAddress,
-    yakYakBankSalt
-  );
-  await yakYakBank.deployed();
-  console.log("YakYak® Bank deployed to:", yakYakBank.address);
+  // const YakYakBank = await ethers.getContractFactory("YakYakBank");
+  // const yakYakRewardAddress = "0xC9F51064022A011152B7dA6dDE44def02b5C157C";
+  // const yakYakBankSalt =
+  //   "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558";
+  // const yakYakBank = await YakYakBank.deploy(
+  //   yakYakRewardAddress,
+  //   yakYakBankSalt
+  // );
+  // await yakYakBank.deployed();
+  // console.log("YakYak® Bank deployed to:", yakYakBank.address);
   // YakYak® Bank: 0x9713B119aa127bBDbA8d9AbEb51F3fFAEC8cA76d
+  const PETH = await ethers.getContractFactory("PETH");
+  const peth = await PETH.deploy();
+  await peth.deployed();
+  console.log("PETH deployed to:", peth.address);
+  // PETH deployed to: 0xbe155CDf7F6dA37684A36DCC02076Ed314d5467a
+  const PUSD = await ethers.getContractFactory("PUSD");
+  const pusd = await PUSD.deploy();
+  await pusd.deployed();
+  console.log("PUSD deployed to:", pusd.address);
+  // PUSD deployed to: 0x7F037a1dF6F62B46Ede765c535187ECCeEF5D455
 }
 
 // We recommend this pattern to be able to use async/await everywhere
