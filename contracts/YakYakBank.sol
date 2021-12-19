@@ -87,7 +87,7 @@ contract YakYakBank is IYakYakBank {
     function withdraw(address to, uint256 amount) public override {
         require(amount <= _ledger[msg.sender], "Bank: Sorry, your balance is running low!");
         _ledger[msg.sender] -= amount;
-        _token.transferFrom(address(this), to, amount);
+        _token.transfer(to, amount);
         emit Withdraw(msg.sender, amount);
     }
 
@@ -139,7 +139,7 @@ contract YakYakBank is IYakYakBank {
         require(_orders[signer][cheque.id].casher == address(0), "Bank: Sorry, this check is void!");
         _ledger[signer] -= cheque.amount;
         _orders[signer][cheque.id] = ORDER(cheque.amount, msg.sender);
-        _token.transferFrom(address(this), msg.sender, cheque.amount);
+        _token.transfer(msg.sender, cheque.amount);
         emit Cash(signer, cheque.id, cheque.amount, msg.sender);
     }
 }
