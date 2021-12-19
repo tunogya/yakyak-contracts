@@ -78,7 +78,7 @@ contract YakYakBank is IYakYakBank {
     // Deposit token into contract
     function deposit(uint256 amount) public override {
         require(amount <= _token.balanceOf(msg.sender), "Bank: Sorry, your balance is running low!");
-        _token.transfer(address(this), amount);
+        _token.transferFrom(msg.sender, address(this), amount);
         _ledger[msg.sender] += amount;
         emit Deposit(msg.sender, amount);
     }
