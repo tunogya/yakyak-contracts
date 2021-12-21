@@ -24,7 +24,7 @@ async function main() {
   const yakYakBank = await YakYakBank.deploy(yakYakRewardAddress);
   await yakYakBank.deployed();
   console.log("YakYak® Bank deployed to:", yakYakBank.address);
-  // YakYak® Bank: 0xBA29386D5cbCB8C047716ad29a7FF3BD282b166E
+  // YakYak® Bank: 0x1Ed9Ac2a181D3501F8049587FDf847436690A038
   // const PETH = await ethers.getContractFactory("PETH");
   // const peth = await PETH.deploy();
   // await peth.deployed();
