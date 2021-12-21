@@ -88,13 +88,13 @@ contract YakYakBank is IYakYakBank {
                     keccak256(
                         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                     ),
-                    keccak256(bytes("YakYak Bank")),
-                    keccak256(bytes("1")),
+                    keccak256(abi.encode("YakYak Bank")),
+                    keccak256(abi.encode("1")),
                     _chainid,
                     address(this)
                 )),
                 keccak256(abi.encode(
-                    keccak256("CHEQUE(uint256 id, uint256 amount)"),
+                    keccak256("Cheque(uint256 id, uint256 amount)"),
                     cheque.id,
                     cheque.amount
                 ))
