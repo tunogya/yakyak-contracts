@@ -58,8 +58,8 @@ contract YakYakBank {
         return _orders[account][id];
     }
 
-    // Verify cheque
-    function verify(uint256 id, uint256 amount, bytes32 r, bytes32 s, uint8 v) public view returns (address) {
+    // Cash cheque
+    function cash(uint8 v, bytes32 r, bytes32 s, address sender, uint256 id, uint256 amount) public {
         bytes32 eip712DomainHash = keccak256(
             abi.encode(
                 keccak256(
@@ -71,29 +71,18 @@ contract YakYakBank {
                 address(this)
             )
         );
-
-        bytes32 chequeHash = keccak256(
+        bytes32 hashCheque = keccak256(
             abi.encode(
-                keccak256(abi.encode("Cheque(uint256 id, uint256 amount)")),
+                keccak256("cheque(address sender,uint256 id,uint256 amount)"),
+                sender,
                 id,
                 amount
             )
         );
-
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                eip712DomainHash,
-                chequeHash
-            )
-        );
-
-        return ecrecover(hash, v, r, s);
-    }
-
-    // Cash cheque
-    function cash(uint256 id, uint256 amount, bytes32 r, bytes32 s, uint8 v) public {
-        address signer = verify(id, amount, r, s, v);
+        bytes32 hash = keccak256(abi.encodePacked("\x19\x01", eip712DomainHash, hashCheque));
+        address signer = ecrecover(hash, v, r, s);
+        require(signer == sender, "Bank: Sorry, invalid signature!");
+        require(signer != address(0), "ECDSA: Sorry, invalid signature!");
         require(amount <= _ledger[signer], "Bank: Sorry, this is a dishonored check!");
         require(_orders[signer][id].casher == address(0), "Bank: Sorry, this check is void!");
         _ledger[signer] -= amount;
