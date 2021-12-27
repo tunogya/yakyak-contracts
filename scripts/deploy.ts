@@ -28,6 +28,7 @@ async function main() {
   const yakYakMe = await YakYakMe.deploy();
   await yakYakMe.deployed();
   console.log("YakYakMe deployed to:", yakYakMe.address);
+  // YakYak® Me: 0x756276F1a5c2DD4ba49c54CcC7729fE0D9d10968
   // YakYak® Bank: 0xBedf7Ecd022be10b4e13B7AFD29CD5fEdEc474ab
   // const PETH = await ethers.getContractFactory("PETH");
   // const peth = await PETH.deploy();
