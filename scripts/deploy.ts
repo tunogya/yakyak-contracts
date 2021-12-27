@@ -19,11 +19,15 @@ async function main() {
   // await yakYakRewards.deployed();
   // console.log("YakYak® Rewards deployed to:", yakYakRewards.address);
   // YakYak® Rewards: 0xC9F51064022A011152B7dA6dDE44def02b5C157C
-  const YakYakBank = await ethers.getContractFactory("YakYakBank");
-  const yakYakRewardAddress = "0xC9F51064022A011152B7dA6dDE44def02b5C157C";
-  const yakYakBank = await YakYakBank.deploy(yakYakRewardAddress);
-  await yakYakBank.deployed();
-  console.log("YakYak® Bank deployed to:", yakYakBank.address);
+  // const YakYakBank = await ethers.getContractFactory("YakYakBank");
+  // const yakYakRewardAddress = "0xC9F51064022A011152B7dA6dDE44def02b5C157C";
+  // const yakYakBank = await YakYakBank.deploy(yakYakRewardAddress);
+  // await yakYakBank.deployed();
+  // console.log("YakYak® Bank deployed to:", yakYakBank.address);
+  const YakYakMe = await ethers.getContractFactory("YakYakMe");
+  const yakYakMe = await YakYakMe.deploy();
+  await yakYakMe.deployed();
+  console.log("YakYakMe deployed to:", yakYakMe.address);
   // YakYak® Bank: 0xBedf7Ecd022be10b4e13B7AFD29CD5fEdEc474ab
   // const PETH = await ethers.getContractFactory("PETH");
   // const peth = await PETH.deploy();
