@@ -34,6 +34,4 @@ contract YakYakMe {
   function addressToName(address account) public view returns (bytes32) {
     return _names[account];
   }
-
-
 }

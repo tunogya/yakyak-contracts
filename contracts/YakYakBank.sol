@@ -10,10 +10,8 @@ contract YakYakBank {
   event Deposit(address indexed account, uint256 amount);
   event Cash(address indexed from, uint256 id, uint256 amount, address indexed casher);
 
-  // The token to be cashed
   ERC20 private _token;
 
-  // Used to EIP712 domain
   uint256 private _chainid;
 
   constructor (address tokenAddress_) {
@@ -21,15 +19,12 @@ contract YakYakBank {
     _chainid = block.chainid;
   }
 
-  // Map of all users' balance
   mapping(address => uint256) private _ledger;
 
-  // Get the balance of account
   function balanceOf(address account) public view returns (uint256) {
     return _ledger[account];
   }
 
-  // Deposit token into contract
   function deposit(uint256 amount) public {
     require(amount <= _token.balanceOf(msg.sender), "Bank: Sorry, your balance is running low!");
     _token.transferFrom(msg.sender, address(this), amount);
@@ -37,7 +32,6 @@ contract YakYakBank {
     emit Deposit(msg.sender, amount);
   }
 
-  // Withdraw token from user's balance
   function withdraw(address to, uint256 amount) public {
     require(amount <= _ledger[msg.sender], "Bank: Sorry, your balance is running low!");
     _ledger[msg.sender] -= amount;
@@ -50,15 +44,12 @@ contract YakYakBank {
     address casher;
   }
 
-  // Map of all users' cashing cheque orders
   mapping(address => mapping(uint256 => ORDER)) private _orders;
 
-  // Get the cashing cheque order
   function getOrder(address account, uint256 id) public view returns (ORDER memory) {
     return _orders[account][id];
   }
 
-  // Cash cheque
   function cash(uint8 v, bytes32 r, bytes32 s, address sender, uint256 id, uint256 amount) public {
     bytes32 eip712DomainHash = keccak256(
       abi.encode(

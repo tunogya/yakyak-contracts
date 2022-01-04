@@ -20,27 +20,12 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   event MomentMinted(uint64 momentID, uint32 playID, uint32 setID, uint32 serialNumber);
   event MomentDestroyed(uint64 id);
 
-  // Series that this Set belongs to.
-  // Series is a concept that indicates a group of Sets through time.
-  // Many Sets can exist at a time, but only one series.
   uint32 private _currentSeries;
-
-  // Variable size dictionary of Play structs
   mapping(uint32 => Play) private _plays;
-
-  // Variable size dictionary of Set resources
   mapping(uint32 => Set) private _sets;
-
-  // Variable size dictionary of Moment structs
   mapping(uint64 => Moment) private _moments;
-
-  // The ID that is used to create Plays.
   uint32 private _nextPlayID;
-
-  // The ID that is used to create Sets.
   uint32 private _nextSetID;
-
-  // The total number of Yak NFTs that have been created, nextMomentID
   uint64 private _totalSupply;
 
   struct Moment {
@@ -51,40 +36,17 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   }
 
   struct Play {
-    // The unique ID for the Play
     uint32 playID;
-
-    // Stores all the metadata about the play as a string mapping
-    mapping(string => string) metadata;
+    string metadata;
   }
 
   struct Set {
-    // Unique ID for the set
     uint32 setID;
-
-    // Name of the Set
     string name;
-
-    // Series that this Set belongs to.
     uint32 series;
-
-    // Array of _plays that are a part of this set
     uint32[] plays;
-
-    // Map of Play IDs that Indicates if a Play in this Set can be minted.
-    // When a Play is added to a Set, it is mapped to false (not retired).
-    // When a Play is retired, this is set to true and cannot be changed.
     mapping(uint32 => bool) retired;
-
-    // Indicates if the Set is currently locked.
-    // When a Set is created, it is unlocked and Plays are allowed to be added to it.
-    // When a set is locked, Plays cannot be added.
-    // A Set can never be changed from locked to unlocked, the decision to lock a Set it is final.
-    // If a Set is locked, Plays cannot be added, but Moments can still be minted from Plays that exist in the Set.
     bool locked;
-
-    // Mapping of Play IDs that indicates the number of Moments that have been minted for specific Plays in this Set.
-    // When a Moment is minted, this value is stored in the Moment to show its place in the Set, eg. 13 of 60.
     mapping(uint32 => uint32) numberMintedPerPlay;
   }
 
@@ -153,24 +115,21 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     _mintMoment(setID, playID);
   }
 
-  function _createPlay(mapping(string => string) storage metadata) private returns (uint32) {
-//    Play storage newPlay = Play(_nextPlayID, metadata);
+  function _createPlay(string memory metadata) private returns (uint32) {
     uint32 newID = _nextPlayID;
-//    _plays[newID] = newPlay;
-//    emit PlayCreated(newID);
+    _plays[newID].playID = newID;
+    _plays[newID].metadata = metadata;
+    emit PlayCreated(newID);
     _nextPlayID += 1;
     return newID;
   }
 
   function _createSet(string memory name) private returns (uint32) {
-//    Set storage newSet;
-//    newSet.setID = _nextSetID;
     uint32 newID = _nextSetID;
-//    newSet.name = name;
-//    newSet.series = _currentSeries;
-//    _sets[_nextSetID] = newSet;
-//    emit SetCreated(newSet.setID, newSet.series);
-
+    _sets[newID].setID = _nextSetID;
+    _sets[newID].name = name;
+    _sets[newID].series = _currentSeries;
+    emit SetCreated(_nextSetID, _currentSeries);
     _nextSetID += 1;
     return newID;
   }
@@ -187,9 +146,9 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
 //    return;
 //  }
 
-//  function getPlayMetaData(uint32 playID) public view returns (mapping(string => string) storage) {
-//    return _plays[playID].metadata;
-//  }
+  function getPlayMetaData(uint32 playID) public view returns (string memory) {
+    return _plays[playID].metadata;
+  }
 
   function getSetName(uint32 setID) public view returns (string memory) {
     return _sets[setID].name;
