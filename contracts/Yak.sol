@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Yak is ERC721, ERC721Burnable, Ownable {
   constructor() ERC721("Yak", "Yak") {
-    _nextPlayID = 1;
-    _nextSetID = 1;
+    _nextPlayID = 0;
+    _nextSetID = 0;
+    _nextMomentID = 0;
   }
 
   event PlayCreated(uint32 id);
@@ -26,7 +27,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   mapping(uint64 => Moment) private _moments;
   uint32 private _nextPlayID;
   uint32 private _nextSetID;
-  uint64 private _totalSupply;
+  uint64 private _nextMomentID;
 
   struct Moment {
     uint64 momentID;
@@ -86,20 +87,22 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   }
 
   function _mintMoment(uint32 setID, uint32 playID) private {
-    require(setID <= _nextSetID, "cannot mint the moment from this play: This set doesn't exist.");
-    require(playID <= _nextPlayID, "cannot mint the moment from this play: This play doesn't exist.");
+    require(setID < _nextSetID, "cannot mint the moment from this play: This set doesn't exist.");
+    require(playID < _nextPlayID, "cannot mint the moment from this play: This play doesn't exist.");
     require(!_sets[setID].retired[playID], "cannot mint the moment from this play: This play has been retired.");
 
-    // Gets the number of Moments that have been minted for this Play
-    _sets[setID].numberMintedPerPlay[playID] += 1;
-    uint32 serialNumber = _sets[setID].numberMintedPerPlay[playID];
-    _totalSupply += 1;
-    uint64 momentID = _totalSupply;
-    Moment memory moment = Moment(momentID, playID, setID, serialNumber);
-    _moments[momentID] = moment;
-
+    Set storage set = _sets[setID];
+    set.numberMintedPerPlay[playID] += 1;
+    uint32 serialNumber = set.numberMintedPerPlay[playID];
+    uint64 momentID = _nextMomentID;
+    Moment storage newMoment = _moments[momentID];
+    newMoment.momentID = momentID;
+    newMoment.playID = playID;
+    newMoment.setID = setID;
+    newMoment.serialNumber = serialNumber;
     _safeMint(address(this), momentID);
-    emit MomentMinted(momentID, playID, setID, _currentSeries);
+    emit MomentMinted(momentID, playID, setID, serialNumber);
+    _nextMomentID += 1;
   }
 
   function _batchMintMoment(uint32 setID, uint32 playID, uint64 quantity) private {
@@ -117,8 +120,9 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
 
   function _createPlay(string memory metadata) private returns (uint32) {
     uint32 newID = _nextPlayID;
-    _plays[newID].playID = newID;
-    _plays[newID].metadata = metadata;
+    Play storage newPlay = _plays[newID];
+    newPlay.playID = newID;
+    newPlay.metadata = metadata;
     emit PlayCreated(newID);
     _nextPlayID += 1;
     return newID;
@@ -126,9 +130,10 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
 
   function _createSet(string memory name) private returns (uint32) {
     uint32 newID = _nextSetID;
-    _sets[newID].setID = _nextSetID;
-    _sets[newID].name = name;
-    _sets[newID].series = _currentSeries;
+    Set storage newSet = _sets[newID];
+    newSet.setID = _nextSetID;
+    newSet.name = name;
+    newSet.series = _currentSeries;
     emit SetCreated(_nextSetID, _currentSeries);
     _nextSetID += 1;
     return newID;
@@ -140,11 +145,6 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
 
     return _currentSeries;
   }
-
-//  function getAllPlays() public view returns (Play[] storage) {
-//    // todo
-//    return;
-//  }
 
   function getPlayMetaData(uint32 playID) public view returns (string memory) {
     return _plays[playID].metadata;
@@ -164,5 +164,21 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
 
   function isSetLocked(uint32 setID) public view returns (bool) {
     return _sets[setID].locked;
+  }
+
+  function getNextPlayID() public view returns (uint32) {
+    return _nextPlayID;
+  }
+
+  function getNextSetID() public view returns (uint32) {
+    return _nextSetID;
+  }
+
+  function getNextMomentID() public view returns (uint64) {
+    return _nextMomentID;
+  }
+
+  function getCurrentSeries() public view returns (uint32) {
+    return _currentSeries;
   }
 }
