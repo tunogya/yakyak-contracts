@@ -116,12 +116,18 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   }
 
   function batchMintMoment(uint32 setID, uint32 playID, uint64 quantity) public onlyOwner {
+    require(setID < _nextSetID, "Cannot mint the moment from this play: Set doesn't exist.");
+    require(playID < _nextPlayID, "Cannot mint the moment from this play: Play doesn't exist.");
+    require(quantity > 0, "Cannot mint the moment from this play: Quantity doesn't been 0.");
+
     for (uint64 i = 0; i < quantity; i++) {
       mintMoment(setID, playID);
     }
   }
 
   function createPlay(string memory metadata) public onlyOwner returns (uint32) {
+    require(bytes(metadata).length > 0, "Cannot create this play: Metadata doesn't been null.");
+
     uint32 newID = _nextPlayID;
     Play storage newPlay = _plays[newID];
     newPlay.playID = newID;
@@ -132,6 +138,8 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   }
 
   function createSet(string memory name) public onlyOwner returns (uint32) {
+    require(bytes(name).length > 0, "Cannot create this set: Name doesn't been null.");
+
     uint32 newID = _nextSetID;
     Set storage newSet = _sets[newID];
     newSet.setID = _nextSetID;
