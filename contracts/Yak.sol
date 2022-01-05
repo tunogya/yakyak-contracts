@@ -22,7 +22,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   event MomentDestroyed(uint64 id);
 
   uint32 private _currentSeries;
-  mapping(uint32 => Play) private _plays;
+  Play[] private _plays;
   mapping(uint32 => Set) private _sets;
   mapping(uint64 => Moment) private _moments;
   uint32 private _nextPlayID;
@@ -47,49 +47,59 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     uint32 series;
     uint32[] plays;
     mapping(uint32 => bool) retired;
+    mapping(uint32 => bool) added;
     bool locked;
     mapping(uint32 => uint32) numberMintedPerPlay;
   }
 
-  function _addPlay(uint32 setID, uint32 playID) private {
-    require(_plays[playID].playID != 0, "Cannot add the Play to Set: Play doesn't exist.");
+  function addPlayToSet(uint32 setID, uint32 playID) public onlyOwner {
+    require(playID < _nextPlayID, "Cannot add the Play to Set: Play doesn't exist.");
+    require(setID < _nextSetID, "Cannot add the Play to Set: Set doesn't exist.");
     require(!_sets[setID].locked, "Cannot add the play to the Set after the set has been locked.");
-    require(_sets[setID].numberMintedPerPlay[playID] == 0, "The play has already been added to the set.");
+    require(_sets[setID].added[playID] == false, "Cannot add the Play to Set: The play has already been added to the set.");
 
-    _sets[setID].plays.push(playID);
-    _sets[setID].retired[playID] = false;
+    Set storage set = _sets[setID];
+    set.plays.push(playID);
+    set.retired[playID] = false;
+    set.added[playID] = true;
     emit PlayAddedToSet(setID, playID);
   }
 
-  function _addPlays(uint32 setID, uint32[] memory playIDs) private {
+  function addPlaysToSet(uint32 setID, uint32[] memory playIDs) public onlyOwner {
     for (uint i = 0; i < playIDs.length; i++) {
-      _addPlay(setID, playIDs[i]);
+      addPlayToSet(setID, playIDs[i]);
     }
   }
 
-  function _retirePlay(uint32 setID, uint32 playID) private {
+  function retirePlayFromSet(uint32 setID, uint32 playID) public onlyOwner {
+    require(setID < _nextSetID, "Cannot add the Play to Set: Set doesn't exist.");
+
     if (!_sets[setID].retired[playID]) {
       _sets[setID].retired[playID] = true;
       emit PlayRetiredFromSet(setID, playID, _sets[setID].numberMintedPerPlay[playID]);
     }
   }
 
-  function _retireAll(uint32 setID) private {
+  function retireAllFromSet(uint32 setID) public onlyOwner {
+    require(setID < _nextSetID, "Cannot add the Play to Set: Set doesn't exist.");
     for (uint i = 0; i < _sets[setID].plays.length; i++) {
-      _retirePlay(setID, _sets[setID].plays[i]);
+      retirePlayFromSet(setID, _sets[setID].plays[i]);
     }
   }
 
-  function _lock(uint32 setID) private {
+  function lockSet(uint32 setID) public onlyOwner {
+    require(setID < _nextSetID, "Cannot add the Play to Set: Set doesn't exist.");
+
     if (!_sets[setID].locked) {
       _sets[setID].locked = true;
+      emit SetLocked(setID);
     }
   }
 
-  function _mintMoment(uint32 setID, uint32 playID) private {
-    require(setID < _nextSetID, "cannot mint the moment from this play: This set doesn't exist.");
-    require(playID < _nextPlayID, "cannot mint the moment from this play: This play doesn't exist.");
-    require(!_sets[setID].retired[playID], "cannot mint the moment from this play: This play has been retired.");
+  function mintMoment(uint32 setID, uint32 playID) public onlyOwner {
+    require(setID < _nextSetID, "Cannot mint the moment from this play: Set doesn't exist.");
+    require(playID < _nextPlayID, "Cannot mint the moment from this play: Play doesn't exist.");
+    require(!_sets[setID].retired[playID], "Cannot mint the moment from this play: Play has been retired.");
 
     Set storage set = _sets[setID];
     set.numberMintedPerPlay[playID] += 1;
@@ -105,20 +115,13 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     _nextMomentID += 1;
   }
 
-  function _batchMintMoment(uint32 setID, uint32 playID, uint64 quantity) private {
+  function batchMintMoment(uint32 setID, uint32 playID, uint64 quantity) public onlyOwner {
     for (uint64 i = 0; i < quantity; i++) {
-      _mintMoment(setID, playID);
+      mintMoment(setID, playID);
     }
   }
 
-  function safeMint(uint32 setID, uint32 playID)
-  public
-  onlyOwner
-  {
-    _mintMoment(setID, playID);
-  }
-
-  function _createPlay(string memory metadata) private returns (uint32) {
+  function createPlay(string memory metadata) private returns (uint32) {
     uint32 newID = _nextPlayID;
     Play storage newPlay = _plays[newID];
     newPlay.playID = newID;
@@ -128,7 +131,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     return newID;
   }
 
-  function _createSet(string memory name) private returns (uint32) {
+  function createSet(string memory name) private returns (uint32) {
     uint32 newID = _nextSetID;
     Set storage newSet = _sets[newID];
     newSet.setID = _nextSetID;
@@ -139,30 +142,50 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     return newID;
   }
 
-  function _startNewSeries() private returns (uint32) {
+  function startNewSeries() private returns (uint32) {
     _currentSeries += 1;
     emit NewSeriesStarted(_currentSeries);
 
     return _currentSeries;
   }
 
+  function getAllPlays() public view returns (Play[] memory) {
+    return _plays;
+  }
+
   function getPlayMetaData(uint32 playID) public view returns (string memory) {
+    require(playID < _nextPlayID, "Play doesn't exist.");
+
     return _plays[playID].metadata;
   }
 
+  function getMoment(uint64 momentID) public view returns (Moment memory) {
+    require(momentID < _nextMomentID, "Moment doesn't exist.");
+
+    return _moments[momentID];
+  }
+
   function getSetName(uint32 setID) public view returns (string memory) {
+    require(setID < _nextSetID, "Set doesn't exist.");
+
     return _sets[setID].name;
   }
 
   function getSetSeries(uint32 setID) public view returns (uint32) {
+    require(setID < _nextSetID, "Set doesn't exist.");
+
     return _sets[setID].series;
   }
 
   function getPlaysInSet(uint32 setID) public view returns (uint32[] memory) {
+    require(setID < _nextSetID, "Set doesn't exist.");
+
     return _sets[setID].plays;
   }
 
   function isSetLocked(uint32 setID) public view returns (bool) {
+    require(setID < _nextSetID, "Set doesn't exist.");
+
     return _sets[setID].locked;
   }
 
