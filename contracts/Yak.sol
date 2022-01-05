@@ -22,7 +22,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
   event MomentDestroyed(uint64 id);
 
   uint32 private _currentSeries;
-  Play[] private _plays;
+  mapping(uint32 => Play) private _plays;
   mapping(uint32 => Set) private _sets;
   mapping(uint64 => Moment) private _moments;
   uint32 private _nextPlayID;
@@ -147,10 +147,6 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     emit NewSeriesStarted(_currentSeries);
 
     return _currentSeries;
-  }
-
-  function getAllPlays() public view returns (Play[] memory) {
-    return _plays;
   }
 
   function getPlayMetaData(uint32 playID) public view returns (string memory) {
