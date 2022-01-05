@@ -121,7 +121,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function createPlay(string memory metadata) private returns (uint32) {
+  function createPlay(string memory metadata) public onlyOwner returns (uint32) {
     uint32 newID = _nextPlayID;
     Play storage newPlay = _plays[newID];
     newPlay.playID = newID;
@@ -131,7 +131,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     return newID;
   }
 
-  function createSet(string memory name) private returns (uint32) {
+  function createSet(string memory name) public onlyOwner returns (uint32) {
     uint32 newID = _nextSetID;
     Set storage newSet = _sets[newID];
     newSet.setID = _nextSetID;
@@ -142,7 +142,7 @@ contract Yak is ERC721, ERC721Burnable, Ownable {
     return newID;
   }
 
-  function startNewSeries() private returns (uint32) {
+  function startNewSeries() public onlyOwner returns (uint32) {
     _currentSeries += 1;
     emit NewSeriesStarted(_currentSeries);
 
