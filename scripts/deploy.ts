@@ -24,22 +24,16 @@ async function main() {
   // const yakYakBank = await YakYakBank.deploy(yakYakRewardAddress);
   // await yakYakBank.deployed();
   // console.log("YakYak® Bank deployed to:", yakYakBank.address);
-  const YakYakMe = await ethers.getContractFactory("YakYakMe");
-  const yakYakMe = await YakYakMe.deploy();
-  await yakYakMe.deployed();
-  console.log("YakYakMe deployed to:", yakYakMe.address);
+  // const YakYakMe = await ethers.getContractFactory("YakYakMe");
+  // const yakYakMe = await YakYakMe.deploy();
+  // await yakYakMe.deployed();
+  // console.log("YakYakMe deployed to:", yakYakMe.address);
   // YakYak® Me: 0x756276F1a5c2DD4ba49c54CcC7729fE0D9d10968
   // YakYak® Bank: 0xBedf7Ecd022be10b4e13B7AFD29CD5fEdEc474ab
-  // const PETH = await ethers.getContractFactory("PETH");
-  // const peth = await PETH.deploy();
-  // await peth.deployed();
-  // console.log("PETH deployed to:", peth.address);
-  // PETH deployed to: 0xbe155CDf7F6dA37684A36DCC02076Ed314d5467a
-  // const PUSD = await ethers.getContractFactory("PUSD");
-  // const pusd = await PUSD.deploy();
-  // await pusd.deployed();
-  // console.log("PUSD deployed to:", pusd.address);
-  // PUSD deployed to: 0x7F037a1dF6F62B46Ede765c535187ECCeEF5D455
+  const Clone = await ethers.getContractFactory("Clone");
+  const clone = await Clone.deploy();
+  await clone.deployed();
+  console.log("Clone deployed to:", clone.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
