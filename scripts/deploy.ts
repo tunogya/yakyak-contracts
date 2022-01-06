@@ -30,10 +30,11 @@ async function main() {
   // console.log("YakYakMe deployed to:", yakYakMe.address);
   // YakYak® Me: 0x756276F1a5c2DD4ba49c54CcC7729fE0D9d10968
   // YakYak® Bank: 0xBedf7Ecd022be10b4e13B7AFD29CD5fEdEc474ab
-  const Clone = await ethers.getContractFactory("Clone");
+  const Clone = await ethers.getContractFactory("YakYakClone");
   const clone = await Clone.deploy();
   await clone.deployed();
-  console.log("Clone deployed to:", clone.address);
+  console.log("YakYakClone deployed to:", clone.address);
+  // YakYakClone deployed to: 0x4635CC872b6a302828d10F59773fF7c78aDEECf6
 }
 
 // We recommend this pattern to be able to use async/await everywhere
