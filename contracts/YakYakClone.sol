@@ -157,7 +157,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _currentSeries;
   }
 
-  function getDNAMetaData(uint32 dnaID) public view returns (string memory) {
+  function getDNAMetadata(uint32 dnaID) public view returns (string memory) {
     require(dnaID < _nextDNAID, "DNA doesn't exist.");
 
     return _dnas[dnaID].metadata;

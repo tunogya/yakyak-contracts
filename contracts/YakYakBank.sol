@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract YakYakBank {
   event Withdraw(address indexed account, uint256 amount);
   event Deposit(address indexed account, uint256 amount);
-  event Cash(address indexed from, uint256 id, uint256 amount, address indexed casher);
+  event Redeem(address indexed from, uint256 id, uint256 amount, address indexed casher);
 
   ERC20 private _token;
 
@@ -50,7 +50,7 @@ contract YakYakBank {
     return _orders[account][id];
   }
 
-  function cash(uint8 v, bytes32 r, bytes32 s, address sender, uint256 id, uint256 amount) public {
+  function redeem(uint8 v, bytes32 r, bytes32 s, address sender, uint256 id, uint256 amount) public {
     bytes32 eip712DomainHash = keccak256(
       abi.encode(
         keccak256(
@@ -79,6 +79,6 @@ contract YakYakBank {
     _ledger[signer] -= amount;
     _orders[signer][id] = ORDER(amount, msg.sender);
     _token.transfer(msg.sender, amount);
-    emit Cash(signer, id, amount, msg.sender);
+    emit Redeem(signer, id, amount, msg.sender);
   }
 }
