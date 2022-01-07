@@ -16,7 +16,7 @@ contract YakYakRewards is ERC20, ERC20Burnable, ERC20Snapshot, AccessControl, Pa
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-  constructor() ERC20(unicode"YakYak® Rewards", unicode"YakYak®") ERC20Permit(unicode"YakYak® Rewards") {
+  constructor() ERC20("YakYak Rewards", "YAK") ERC20Permit("YakYak Rewards") {
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(SNAPSHOT_ROLE, msg.sender);
     _grantRole(PAUSER_ROLE, msg.sender);
