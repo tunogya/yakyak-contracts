@@ -4,32 +4,37 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract YakYakClone is ERC721, ERC721Burnable, Ownable {
-  constructor() ERC721("YakYakClone", "Clone") {
+  ERC20 private _token;
+
+  constructor(address tokenAddress_) ERC721("Yaklon", "YAKLON") {
     _nextDNAID = 0;
     _nextSetID = 0;
     _nextCloneID = 0;
+    _token = ERC20(tokenAddress_);
   }
 
-  event DNACreated(uint32 id);
-  event NewSeriesStarted(uint32 new_currentSeries);
-  event SetCreated(uint32 setID, uint32 series);
-  event DNAAddedToSet(uint32 setID, uint32 dnaID);
-  event DNARetiredFromSet(uint32 setID, uint32 playID, uint32 numClones);
-  event SetLocked(uint32 setID);
-  event CloneMinted(uint64 cloneID, uint32 dnaID, uint32 setID, uint32 serialNumber);
-  event CloneDestroyed(uint64 id);
+  event DNACreated(uint32 indexed id);
+  event NewSeriesStarted(uint32 indexed new_currentSeries);
+  event SetCreated(uint32 indexed setID, uint32 indexed series);
+  event DNAAddedToSet(uint32 indexed setID, uint32 indexed dnaID);
+  event DNARetiredFromSet(uint32 indexed setID, uint32 indexed dnaID, uint32 numClones);
+  event SetLocked(uint32 indexed setID);
+  event YaklonCloned(uint64 indexed cloneID, uint32 indexed dnaID, uint32 indexed setID, uint32 serialNumber);
+  event YaklonDestroyed(uint64 indexed id);
+  event Withdraw(address indexed account, uint256 amount);
 
   uint32 private _currentSeries;
   mapping(uint32 => DNA) private _dnas;
   mapping(uint32 => Set) private _sets;
-  mapping(uint64 => CloneData) private _clones;
+  mapping(uint64 => Yaklon) private _yaklons;
   uint32 private _nextDNAID;
   uint32 private _nextSetID;
   uint64 private _nextCloneID;
 
-  struct CloneData {
+  struct Yaklon {
     uint64 cloneID;
     uint32 dnaID;
     uint32 setID;
@@ -39,6 +44,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   struct DNA {
     uint32 dnaID;
     string metadata;
+    uint256 fee;
   }
 
   struct Set {
@@ -96,42 +102,46 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function mintClone(uint32 setID, uint32 dnaID) public onlyOwner {
-    require(setID < _nextSetID, "Cannot mint the clone from this yak: Set doesn't exist.");
-    require(dnaID < _nextDNAID, "Cannot mint the clone from this dna: DNA doesn't exist.");
-    require(!_sets[setID].retired[dnaID], "Cannot mint the clone from this yak: DNA has been retired.");
+  function cloning(uint32 setID, uint32 dnaID) public {
+    require(setID < _nextSetID, "Cannot clone the dna: Set doesn't exist.");
+    require(dnaID < _nextDNAID, "Cannot clone the dna: DNA doesn't exist.");
+    require(!_sets[setID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
+    require(_token.balanceOf(msg.sender) >= _dnas[dnaID].fee, "Cannot clone the dna: Your balance is running low.");
+
+    _token.transferFrom(msg.sender, address(this), _dnas[dnaID].fee);
 
     Set storage set = _sets[setID];
     set.numberMintedPerDNA[dnaID] += 1;
     uint32 serialNumber = set.numberMintedPerDNA[dnaID];
     uint64 cloneID = _nextCloneID;
-    CloneData storage newClone = _clones[cloneID];
+    Yaklon storage newClone = _yaklons[cloneID];
     newClone.cloneID = cloneID;
     newClone.dnaID = dnaID;
     newClone.setID = setID;
     newClone.serialNumber = serialNumber;
     _safeMint(msg.sender, cloneID);
-    emit CloneMinted(cloneID, dnaID, setID, serialNumber);
+    emit YaklonCloned(cloneID, dnaID, setID, serialNumber);
     _nextCloneID += 1;
   }
 
-  function batchMintClones(uint32 setID, uint32 dnaID, uint64 quantity) public onlyOwner {
+  function batchCloning(uint32 setID, uint32 dnaID, uint64 quantity) public onlyOwner {
     require(setID < _nextSetID, "Cannot mint the clone from this dna: Set doesn't exist.");
     require(dnaID < _nextDNAID, "Cannot mint the clone from this dna: DNA doesn't exist.");
     require(quantity > 0, "Cannot mint the clone from this dna: Quantity doesn't been 0.");
 
     for (uint64 i = 0; i < quantity; i++) {
-      mintClone(setID, dnaID);
+      cloning(setID, dnaID);
     }
   }
 
-  function createDNA(string memory metadata) public onlyOwner returns (uint32) {
+  function createDNA(string memory metadata, uint256 fee) public onlyOwner returns (uint32) {
     require(bytes(metadata).length > 0, "Cannot create this dna: Metadata doesn't been null.");
 
     uint32 newID = _nextDNAID;
     DNA storage newDNA = _dnas[newID];
     newDNA.dnaID = newID;
     newDNA.metadata = metadata;
+    newDNA.fee = fee;
     emit DNACreated(newID);
     _nextDNAID += 1;
     return newID;
@@ -157,16 +167,22 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _currentSeries;
   }
 
+  function withdraw(address to, uint256 amount) public onlyOwner {
+    require(amount <= _token.balanceOf(address(this)), "Sorry, the balance is running low!");
+    _token.transfer(to, amount);
+    emit Withdraw(msg.sender, amount);
+  }
+
   function getDNAMetadata(uint32 dnaID) public view returns (string memory) {
     require(dnaID < _nextDNAID, "DNA doesn't exist.");
 
     return _dnas[dnaID].metadata;
   }
 
-  function getClone(uint64 cloneID) public view returns (CloneData memory) {
-    require(cloneID < _nextCloneID, "Clone doesn't exist.");
+  function getYaklon(uint64 cloneID) public view returns (Yaklon memory) {
+    require(cloneID < _nextCloneID, "Yaklon doesn't exist.");
 
-    return _clones[cloneID];
+    return _yaklons[cloneID];
   }
 
   function getSetName(uint32 setID) public view returns (string memory) {
