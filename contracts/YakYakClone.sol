@@ -110,7 +110,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     newClone.dnaID = dnaID;
     newClone.setID = setID;
     newClone.serialNumber = serialNumber;
-    _safeMint(address(this), cloneID);
+    _safeMint(msg.sender, cloneID);
     emit CloneMinted(cloneID, dnaID, setID, serialNumber);
     _nextCloneID += 1;
   }
@@ -179,6 +179,10 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     require(setID < _nextSetID, "Set doesn't exist.");
 
     return _sets[setID].series;
+  }
+
+  function getAllDNAs() public {
+
   }
 
   function getDNAsInSet(uint32 setID) public view returns (uint32[] memory) {
