@@ -24,7 +24,8 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   event SetLocked(uint32 indexed setID);
   event YaklonCloned(uint64 indexed cloneID, uint32 indexed dnaID, uint32 indexed setID, uint32 serialNumber);
   event YaklonDestroyed(uint64 indexed id);
-  event Withdraw(address indexed account, uint256 amount);
+  event Withdraw(address indexed account, uint64 amount);
+  event Transfer(address indexed from, address indexed to, uint64 indexed cloneID);
 
   uint32 private _currentSeries;
   mapping(uint32 => DNA) private _dnas;
@@ -44,7 +45,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   struct DNA {
     uint32 dnaID;
     string metadata;
-    uint256 fee;
+    uint64 fee;
   }
 
   struct Set {
@@ -58,8 +59,13 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     mapping(uint32 => uint32) numberMintedPerDNA;
   }
 
-  function totalSupply() public view returns (uint256) {
+  function totalSupply() public view returns (uint64) {
     return _nextCloneID;
+  }
+
+  function transfer(address to, uint64 cloneID) public returns (bool) {
+    _safeTransfer(msg.sender, to, cloneID, "");
+    return true;
   }
 
   function addDNAToSet(uint32 setID, uint32 dnaID) public onlyOwner {
@@ -138,7 +144,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function createDNA(string memory metadata, uint256 fee) public onlyOwner returns (uint32) {
+  function createDNA(string memory metadata, uint64 fee) public onlyOwner returns (uint32) {
     require(bytes(metadata).length > 0, "Cannot create this dna: Metadata doesn't been null.");
 
     uint32 newID = _nextDNAID;
@@ -171,7 +177,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _currentSeries;
   }
 
-  function withdraw(address to, uint256 amount) public onlyOwner {
+  function withdraw(address to, uint64 amount) public onlyOwner {
     require(amount <= _token.balanceOf(address(this)), "Sorry, the balance is running low!");
     _token.transfer(to, amount);
     emit Withdraw(msg.sender, amount);
