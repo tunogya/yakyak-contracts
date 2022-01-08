@@ -14,21 +14,24 @@ async function main() {
     (await deployer.getBalance()).toString(),
     "\n"
   );
-  const Rewards = await ethers.getContractFactory("YakYakRewards");
-  const rewards = await Rewards.deploy();
-  await rewards.deployed();
-  console.log("YakYak Rewards deployed to:", rewards.address);
+  // const Rewards = await ethers.getContractFactory("YakYakRewards");
+  // const rewards = await Rewards.deploy();
+  // await rewards.deployed();
+  // console.log("YakYak Rewards deployed to:", rewards.address);
   // YakYak Rewards: 0x8678a05fC4d51a47BEBFDb5446171037de605f25
-  const Bank = await ethers.getContractFactory("YakYakBank");
-  const bank = await Bank.deploy(rewards.address);
-  await bank.deployed();
-  console.log("YakYak Bank deployed to:", bank.address);
+  // const Bank = await ethers.getContractFactory("YakYakBank");
+  // const bank = await Bank.deploy(rewards.address);
+  // await bank.deployed();
+  // console.log("YakYak Bank deployed to:", bank.address);
   // YakYak Bank: 0x3705b5eA8AB6cf63dC25e5DFE5AF37E71Bf8d9B5
   const Yaklon = await ethers.getContractFactory("YakYakClone");
-  const clone = await Yaklon.deploy(rewards.address);
+  // const clone = await Yaklon.deploy(rewards.address);
+  const clone = await Yaklon.deploy(
+    "0x8678a05fC4d51a47BEBFDb5446171037de605f25"
+  );
   await clone.deployed();
   console.log("YakYak Clone deployed to:", clone.address);
-  // YakYak Clone deployed to: 0x34d827CdaF8f51954cA10C4540b387e32D0bCE36
+  // YakYak Clone deployed to: 0x989964Cb62ade8ebb24A8C1dDDF67c81943cABB5
 }
 
 // We recommend this pattern to be able to use async/await everywhere
