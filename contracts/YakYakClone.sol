@@ -58,6 +58,10 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     mapping(uint32 => uint32) numberMintedPerDNA;
   }
 
+  function totalSupply() public view virtual override returns (uint256) {
+    return _nextCloneID;
+  }
+
   function addDNAToSet(uint32 setID, uint32 dnaID) public onlyOwner {
     require(dnaID < _nextDNAID, "Cannot add the dna to Set: DNA doesn't exist.");
     require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
@@ -215,10 +219,6 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
 
   function getNextSetID() public view returns (uint32) {
     return _nextSetID;
-  }
-
-  function getNextCloneID() public view returns (uint64) {
-    return _nextCloneID;
   }
 
   function getCurrentSeries() public view returns (uint32) {
