@@ -25,7 +25,6 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   event YaklonCloned(uint64 indexed cloneID, uint32 indexed dnaID, uint32 indexed setID, uint32 serialNumber);
   event YaklonDestroyed(uint64 indexed id);
   event Withdraw(address indexed account, uint64 amount);
-  event Transfer(address indexed from, address indexed to, uint64 indexed cloneID);
 
   uint32 private _currentSeries;
   mapping(uint32 => DNA) private _dnas;
@@ -68,6 +67,12 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return true;
   }
 
+  function batchTransfer(address to, uint64[] memory cloneIDs) public {
+    for (uint64 i = 0; i < cloneIDs.length; i ++) {
+      transfer(to, cloneIDs[i]);
+    }
+  }
+
   function addDNAToSet(uint32 setID, uint32 dnaID) public onlyOwner {
     require(dnaID < _nextDNAID, "Cannot add the dna to Set: DNA doesn't exist.");
     require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
@@ -82,7 +87,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   }
 
   function addDNAsToSet(uint32 setID, uint32[] memory dnaIDs) public onlyOwner {
-    for (uint i = 0; i < dnaIDs.length; i++) {
+    for (uint32 i = 0; i < dnaIDs.length; i++) {
       addDNAToSet(setID, dnaIDs[i]);
     }
   }
@@ -98,7 +103,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
 
   function retireAllFromSet(uint32 setID) public onlyOwner {
     require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
-    for (uint i = 0; i < _sets[setID].dnas.length; i++) {
+    for (uint32 i = 0; i < _sets[setID].dnas.length; i++) {
       retireDNAFromSet(setID, _sets[setID].dnas[i]);
     }
   }
