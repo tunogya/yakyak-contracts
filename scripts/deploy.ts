@@ -31,7 +31,7 @@ async function main() {
   );
   await clone.deployed();
   console.log("YakYak Clone deployed to:", clone.address);
-  // YakYak Clone deployed to: 0x989964Cb62ade8ebb24A8C1dDDF67c81943cABB5
+  // YakYak Clone deployed to: 0xC92831214747dac175e0B4b1e4711124c3214fbf
 }
 
 // We recommend this pattern to be able to use async/await everywhere
