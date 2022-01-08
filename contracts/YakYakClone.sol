@@ -73,6 +73,12 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
+  function batchBurn(uint64[] memory cloneIDs) public {
+    for (uint64 i = 0; i < cloneIDs.length; i ++) {
+      _burn(cloneIDs[i]);
+    }
+  }
+
   function addDNAToSet(uint32 setID, uint32 dnaID) public onlyOwner {
     require(dnaID < _nextDNAID, "Cannot add the dna to Set: DNA doesn't exist.");
     require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
