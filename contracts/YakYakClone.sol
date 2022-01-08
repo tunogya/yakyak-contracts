@@ -183,7 +183,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _dnas[dnaID].metadata;
   }
 
-  function getYaklon(uint64 cloneID) public view returns (Yaklon memory) {
+  function tokenURI(uint64 cloneID) public view returns (Yaklon memory) {
     require(cloneID < _nextCloneID, "Yaklon doesn't exist.");
 
     return _yaklons[cloneID];
