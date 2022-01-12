@@ -11,234 +11,243 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
 
   constructor(address tokenAddress_) ERC721("Yaklon", "YAKLON") {
     _nextDNAID = 0;
-    _nextSetID = 0;
+    _nextPeriodID = 0;
     _nextCloneID = 0;
     _token = ERC20(tokenAddress_);
   }
 
-  event DNACreated(uint32 indexed id);
-  event NewSeriesStarted(uint32 indexed new_currentSeries);
-  event SetCreated(uint32 indexed setID, uint32 indexed series);
-  event DNAAddedToSet(uint32 indexed setID, uint32 indexed dnaID);
-  event DNARetiredFromSet(uint32 indexed setID, uint32 indexed dnaID, uint32 numClones);
-  event SetLocked(uint32 indexed setID);
-  event YaklonCloned(uint64 indexed cloneID, uint32 indexed dnaID, uint32 indexed setID, uint32 serialNumber);
-  event YaklonDestroyed(uint64 indexed id);
-  event Withdraw(address indexed account, uint64 amount);
+  event DNACreated(uint256 indexed id);
+  event NewSeriesStarted(uint256 indexed new_currentSeries);
+  event PeriodCreated(uint256 indexed periodID, uint256 indexed series);
+  event DNAAddedToSet(uint256 indexed periodID, uint256 indexed dnaID);
+  event DNARetiredFromSet(uint256 indexed periodID, uint256 indexed dnaID, uint256 numClones);
+  event PeriodLocked(uint256 indexed periodID);
+  event YaklonCloned(uint256 indexed cloneID, uint256 indexed dnaID, uint256 indexed periodID, uint256 serialNumber);
+  event YaklonDestroyed(uint256 indexed id);
+  event Withdraw(address indexed account, uint256 amount);
 
-  uint32 private _currentSeries;
-  mapping(uint32 => DNA) private _dnas;
-  mapping(uint32 => Set) private _sets;
-  mapping(uint64 => Yaklon) private _yaklons;
-  uint32 private _nextDNAID;
-  uint32 private _nextSetID;
-  uint64 private _nextCloneID;
+  uint256 private _currentSeries;
+  mapping(uint256 => DNA) private _dnas;
+  mapping(uint256 => Period) private _periods;
+  mapping(uint256 => Yaklon) private _yaklons;
+  uint256 private _nextDNAID;
+  uint256 private _nextPeriodID;
+  uint256 private _nextCloneID;
 
   struct Yaklon {
-    uint64 cloneID;
-    uint32 dnaID;
-    uint32 setID;
-    uint32 serialNumber;
+    uint256 cloneID;
+    uint256 dnaID;
+    uint256 periodID;
+    uint256 serialNumber;
+    uint256 from;
+    uint256 weight;
+    string metadata;
   }
 
   struct DNA {
-    uint32 dnaID;
+    uint256 dnaID;
+    uint256 scale;
+    uint8 level;
     string metadata;
-    uint64 fee;
   }
 
-  struct Set {
-    uint32 setID;
+  struct Period {
+    uint256 periodID;
     string name;
-    uint32 series;
-    uint32[] dnas;
-    mapping(uint32 => bool) retired;
-    mapping(uint32 => bool) added;
+    uint256 start;
+    uint256 end;
+    uint256 series;
+    uint256[] dnas;
+    mapping(uint256 => bool) retired;
+    mapping(uint256 => bool) added;
     bool locked;
-    mapping(uint32 => uint32) numberMintedPerDNA;
+    mapping(uint256 => uint256) numberMintedPerDNA;
   }
 
-  function totalSupply() public view returns (uint64) {
+  function totalSupply() public view returns (uint256) {
     return _nextCloneID;
   }
 
-  function transfer(address to, uint64 cloneID) public returns (bool) {
+  function transfer(address to, uint256 cloneID) public returns (bool) {
     _safeTransfer(msg.sender, to, cloneID, "");
     return true;
   }
 
-  function batchTransfer(address to, uint64[] memory cloneIDs) public {
-    for (uint64 i = 0; i < cloneIDs.length; i ++) {
+  function batchTransfer(address to, uint256[] memory cloneIDs) public {
+    for (uint256 i = 0; i < cloneIDs.length; i ++) {
       transfer(to, cloneIDs[i]);
     }
   }
 
-  function batchBurn(uint64[] memory cloneIDs) public {
-    for (uint64 i = 0; i < cloneIDs.length; i ++) {
+  function batchBurn(uint256[] memory cloneIDs) public {
+    for (uint256 i = 0; i < cloneIDs.length; i ++) {
       _burn(cloneIDs[i]);
     }
   }
 
-  function addDNAToSet(uint32 setID, uint32 dnaID) public onlyOwner {
+  function addDNAToSet(uint256 setID, uint256 dnaID) public onlyOwner {
     require(dnaID < _nextDNAID, "Cannot add the dna to Set: DNA doesn't exist.");
-    require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
-    require(!_sets[setID].locked, "Cannot add the dna to the Set after the set has been locked.");
-    require(_sets[setID].added[dnaID] == false, "Cannot add the dna to Set: The dna has already been added to the set.");
+    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
+    require(!_periods[setID].locked, "Cannot add the dna to the Set after the set has been locked.");
+    require(_periods[setID].added[dnaID] == false, "Cannot add the dna to Set: The dna has already been added to the set.");
 
-    Set storage set = _sets[setID];
+    Period storage set = _periods[setID];
     set.dnas.push(dnaID);
     set.retired[dnaID] = false;
     set.added[dnaID] = true;
     emit DNAAddedToSet(setID, dnaID);
   }
 
-  function addDNAsToSet(uint32 setID, uint32[] memory dnaIDs) public onlyOwner {
-    for (uint32 i = 0; i < dnaIDs.length; i++) {
+  function addDNAsToSet(uint256 setID, uint256[] memory dnaIDs) public onlyOwner {
+    for (uint256 i = 0; i < dnaIDs.length; i++) {
       addDNAToSet(setID, dnaIDs[i]);
     }
   }
 
-  function retireDNAFromSet(uint32 setID, uint32 dnaID) public onlyOwner {
-    require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
+  function retireDNAFromSet(uint256 setID, uint256 dnaID) public onlyOwner {
+    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
 
-    if (!_sets[setID].retired[dnaID]) {
-      _sets[setID].retired[dnaID] = true;
-      emit DNARetiredFromSet(setID, dnaID, _sets[setID].numberMintedPerDNA[dnaID]);
+    if (!_periods[setID].retired[dnaID]) {
+      _periods[setID].retired[dnaID] = true;
+      emit DNARetiredFromSet(setID, dnaID, _periods[setID].numberMintedPerDNA[dnaID]);
     }
   }
 
-  function retireAllFromSet(uint32 setID) public onlyOwner {
-    require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
-    for (uint32 i = 0; i < _sets[setID].dnas.length; i++) {
-      retireDNAFromSet(setID, _sets[setID].dnas[i]);
+  function retireAllFromSet(uint256 setID) public onlyOwner {
+    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
+    for (uint256 i = 0; i < _periods[setID].dnas.length; i++) {
+      retireDNAFromSet(setID, _periods[setID].dnas[i]);
     }
   }
 
-  function lockSet(uint32 setID) public onlyOwner {
-    require(setID < _nextSetID, "Cannot add the dna to Set: Set doesn't exist.");
+  function lockSet(uint256 setID) public onlyOwner {
+    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
 
-    if (!_sets[setID].locked) {
-      _sets[setID].locked = true;
-      emit SetLocked(setID);
+    if (!_periods[setID].locked) {
+      _periods[setID].locked = true;
+      emit PeriodLocked(setID);
     }
   }
 
-  function cloning(uint32 setID, uint32 dnaID) public {
-    require(setID < _nextSetID, "Cannot clone the dna: Set doesn't exist.");
+  function rand(uint256 _length) public view returns (uint256) {
+    uint256 random = uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
+    return random % _length;
+  }
+
+  function cloning(uint256 setID, uint256 dnaID, string memory metadata) public {
+    require(setID < _nextPeriodID, "Cannot clone the dna: Set doesn't exist.");
     require(dnaID < _nextDNAID, "Cannot clone the dna: DNA doesn't exist.");
-    require(!_sets[setID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
-    require(_token.balanceOf(msg.sender) >= _dnas[dnaID].fee, "Cannot clone the dna: Your balance is running low.");
-
-    _token.transferFrom(msg.sender, address(this), _dnas[dnaID].fee);
-
-    Set storage set = _sets[setID];
+    require(!_periods[setID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
+    Period storage set = _periods[setID];
     set.numberMintedPerDNA[dnaID] += 1;
-    uint32 serialNumber = set.numberMintedPerDNA[dnaID];
-    uint64 cloneID = _nextCloneID;
+    DNA storage dna = _dnas[dnaID];
+    uint256 randomFrom = rand(set.end - set.start) + set.start;
+    uint256 randomScale = (rand(dna.scale * 2) + dna.scale * 9) / 10;
+    uint256 cost = randomFrom * randomScale * (10 ** (dna.level - 1));
+    require(_token.balanceOf(msg.sender) >= cost, "Cannot clone the dna: Your balance is running low.");
+    _token.transferFrom(msg.sender, address(this), cost);
+    uint256 serialNumber = set.numberMintedPerDNA[dnaID];
+    uint256 cloneID = _nextCloneID;
     Yaklon storage newClone = _yaklons[cloneID];
     newClone.cloneID = cloneID;
     newClone.dnaID = dnaID;
-    newClone.setID = setID;
+    newClone.periodID = setID;
+    newClone.from = randomFrom;
+    newClone.weight = randomScale;
     newClone.serialNumber = serialNumber;
+    newClone.metadata = metadata;
     _safeMint(msg.sender, cloneID);
     emit YaklonCloned(cloneID, dnaID, setID, serialNumber);
     _nextCloneID += 1;
   }
 
-  function batchCloning(uint32 setID, uint32 dnaID, uint64 quantity) public onlyOwner {
-    require(setID < _nextSetID, "Cannot mint the clone from this dna: Set doesn't exist.");
-    require(dnaID < _nextDNAID, "Cannot mint the clone from this dna: DNA doesn't exist.");
-    require(quantity > 0, "Cannot mint the clone from this dna: Quantity doesn't been 0.");
-
-    for (uint64 i = 0; i < quantity; i++) {
-      cloning(setID, dnaID);
-    }
-  }
-
-  function createDNA(string memory metadata, uint64 fee) public onlyOwner returns (uint32) {
+  function createDNA(string memory metadata, uint256 weight, uint8 level) public onlyOwner returns (uint256) {
     require(bytes(metadata).length > 0, "Cannot create this dna: Metadata doesn't been null.");
-
-    uint32 newID = _nextDNAID;
+    uint256 newID = _nextDNAID;
     DNA storage newDNA = _dnas[newID];
     newDNA.dnaID = newID;
     newDNA.metadata = metadata;
-    newDNA.fee = fee;
+    newDNA.scale = weight;
+    newDNA.level = level;
     emit DNACreated(newID);
     _nextDNAID += 1;
     return newID;
   }
 
-  function createSet(string memory name) public onlyOwner returns (uint32) {
+  function createPeriod(string memory name, uint256 start, uint256 end) public onlyOwner returns (uint256) {
     require(bytes(name).length > 0, "Cannot create this set: Name doesn't been null.");
+    require(end > start, "Cannot create this set: end should greater than start.");
 
-    uint32 newID = _nextSetID;
-    Set storage newSet = _sets[newID];
-    newSet.setID = _nextSetID;
+    uint256 newID = _nextPeriodID;
+    Period storage newSet = _periods[newID];
+    newSet.periodID = _nextPeriodID;
     newSet.name = name;
+    newSet.start = start;
+    newSet.end = end;
     newSet.series = _currentSeries;
-    emit SetCreated(_nextSetID, _currentSeries);
-    _nextSetID += 1;
+    emit PeriodCreated(_nextPeriodID, _currentSeries);
+    _nextPeriodID += 1;
     return newID;
   }
 
-  function startNewSeries() public onlyOwner returns (uint32) {
+  function startNewSeries() public onlyOwner returns (uint256) {
     _currentSeries += 1;
     emit NewSeriesStarted(_currentSeries);
 
     return _currentSeries;
   }
 
-  function withdraw(address to, uint64 amount) public onlyOwner {
+  function withdraw(address to, uint256 amount) public onlyOwner {
     require(amount <= _token.balanceOf(address(this)), "Sorry, the balance is running low!");
     _token.transfer(to, amount);
     emit Withdraw(msg.sender, amount);
   }
 
-  function getDNAMetadata(uint32 dnaID) public view returns (string memory) {
+  function getDNAMetadata(uint256 dnaID) public view returns (string memory) {
     require(dnaID < _nextDNAID, "DNA doesn't exist.");
 
     return _dnas[dnaID].metadata;
   }
 
-  function tokenURI(uint64 cloneID) public view returns (Yaklon memory) {
+  function tokenURI(uint256 cloneID) public override view returns (string memory) {
     require(cloneID < _nextCloneID, "Yaklon doesn't exist.");
 
-    return _yaklons[cloneID];
+    return _yaklons[cloneID].metadata;
   }
 
-  function getSetName(uint32 setID) public view returns (string memory) {
-    require(setID < _nextSetID, "Set doesn't exist.");
+  function getSetName(uint256 setID) public view returns (string memory) {
+    require(setID < _nextPeriodID, "Set doesn't exist.");
 
-    return _sets[setID].name;
+    return _periods[setID].name;
   }
 
-  function getSetSeries(uint32 setID) public view returns (uint32) {
-    require(setID < _nextSetID, "Set doesn't exist.");
+  function getSetSeries(uint256 setID) public view returns (uint256) {
+    require(setID < _nextPeriodID, "Set doesn't exist.");
 
-    return _sets[setID].series;
+    return _periods[setID].series;
   }
 
-  function getDNAsInSet(uint32 setID) public view returns (uint32[] memory) {
-    require(setID < _nextSetID, "Set doesn't exist.");
+  function getDNAsInSet(uint256 setID) public view returns (uint256[] memory) {
+    require(setID < _nextPeriodID, "Set doesn't exist.");
 
-    return _sets[setID].dnas;
+    return _periods[setID].dnas;
   }
 
-  function isSetLocked(uint32 setID) public view returns (bool) {
-    require(setID < _nextSetID, "Set doesn't exist.");
+  function isSetLocked(uint256 setID) public view returns (bool) {
+    require(setID < _nextPeriodID, "Set doesn't exist.");
 
-    return _sets[setID].locked;
+    return _periods[setID].locked;
   }
 
-  function getNextDNAID() public view returns (uint32) {
+  function getNextDNAID() public view returns (uint256) {
     return _nextDNAID;
   }
 
-  function getNextSetID() public view returns (uint32) {
-    return _nextSetID;
+  function getNextSetID() public view returns (uint256) {
+    return _nextPeriodID;
   }
 
-  function getCurrentSeries() public view returns (uint32) {
+  function getCurrentSeries() public view returns (uint256) {
     return _currentSeries;
   }
 }
