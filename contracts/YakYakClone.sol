@@ -85,47 +85,47 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function addDNAToSet(uint256 setID, uint256 dnaID) public onlyOwner {
-    require(dnaID < _nextDNAID, "Cannot add the dna to Set: DNA doesn't exist.");
-    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
-    require(!_periods[setID].locked, "Cannot add the dna to the Set after the set has been locked.");
-    require(_periods[setID].added[dnaID] == false, "Cannot add the dna to Set: The dna has already been added to the set.");
+  function addDNAToSet(uint256 periodID, uint256 dnaID) public onlyOwner {
+    require(dnaID < _nextDNAID, "Cannot add the dna to Period: DNA doesn't exist.");
+    require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
+    require(!_periods[periodID].locked, "Cannot add the dna to the Period after the set has been locked.");
+    require(_periods[periodID].added[dnaID] == false, "Cannot add the dna to Period: The dna has already been added to the set.");
 
-    Period storage set = _periods[setID];
+    Period storage set = _periods[periodID];
     set.dnas.push(dnaID);
     set.retired[dnaID] = false;
     set.added[dnaID] = true;
-    emit DNAAddedToSet(setID, dnaID);
+    emit DNAAddedToSet(periodID, dnaID);
   }
 
-  function addDNAsToSet(uint256 setID, uint256[] memory dnaIDs) public onlyOwner {
+  function addDNAsToSet(uint256 periodID, uint256[] memory dnaIDs) public onlyOwner {
     for (uint256 i = 0; i < dnaIDs.length; i++) {
-      addDNAToSet(setID, dnaIDs[i]);
+      addDNAToSet(periodID, dnaIDs[i]);
     }
   }
 
-  function retireDNAFromSet(uint256 setID, uint256 dnaID) public onlyOwner {
-    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
+  function retireDNAFromSet(uint256 periodID, uint256 dnaID) public onlyOwner {
+    require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
 
-    if (!_periods[setID].retired[dnaID]) {
-      _periods[setID].retired[dnaID] = true;
-      emit DNARetiredFromSet(setID, dnaID, _periods[setID].numberMintedPerDNA[dnaID]);
+    if (!_periods[periodID].retired[dnaID]) {
+      _periods[periodID].retired[dnaID] = true;
+      emit DNARetiredFromSet(periodID, dnaID, _periods[periodID].numberMintedPerDNA[dnaID]);
     }
   }
 
-  function retireAllFromSet(uint256 setID) public onlyOwner {
-    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
-    for (uint256 i = 0; i < _periods[setID].dnas.length; i++) {
-      retireDNAFromSet(setID, _periods[setID].dnas[i]);
+  function retireAllFromSet(uint256 periodID) public onlyOwner {
+    require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
+    for (uint256 i = 0; i < _periods[periodID].dnas.length; i++) {
+      retireDNAFromSet(periodID, _periods[periodID].dnas[i]);
     }
   }
 
-  function lockSet(uint256 setID) public onlyOwner {
-    require(setID < _nextPeriodID, "Cannot add the dna to Set: Set doesn't exist.");
+  function lockSet(uint256 periodID) public onlyOwner {
+    require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
 
-    if (!_periods[setID].locked) {
-      _periods[setID].locked = true;
-      emit PeriodLocked(setID);
+    if (!_periods[periodID].locked) {
+      _periods[periodID].locked = true;
+      emit PeriodLocked(periodID);
     }
   }
 
@@ -134,11 +134,11 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return random % _length;
   }
 
-  function cloning(uint256 setID, uint256 dnaID, string memory metadata) public {
-    require(setID < _nextPeriodID, "Cannot clone the dna: Set doesn't exist.");
+  function cloning(uint256 periodID, uint256 dnaID, string memory metadata) public {
+    require(periodID < _nextPeriodID, "Cannot clone the dna: Period doesn't exist.");
     require(dnaID < _nextDNAID, "Cannot clone the dna: DNA doesn't exist.");
-    require(!_periods[setID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
-    Period storage set = _periods[setID];
+    require(!_periods[periodID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
+    Period storage set = _periods[periodID];
     set.numberMintedPerDNA[dnaID] += 1;
     DNA storage dna = _dnas[dnaID];
     uint256 randomFrom = rand(set.end - set.start) + set.start;
@@ -151,13 +151,13 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     Yaklon storage newClone = _yaklons[cloneID];
     newClone.cloneID = cloneID;
     newClone.dnaID = dnaID;
-    newClone.periodID = setID;
+    newClone.periodID = periodID;
     newClone.from = randomFrom;
     newClone.weight = randomScale;
     newClone.serialNumber = serialNumber;
     newClone.metadata = metadata;
     _safeMint(msg.sender, cloneID);
-    emit YaklonCloned(cloneID, dnaID, setID, serialNumber);
+    emit YaklonCloned(cloneID, dnaID, periodID, serialNumber);
     _nextCloneID += 1;
   }
 
@@ -215,35 +215,35 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _yaklons[cloneID].metadata;
   }
 
-  function getSetName(uint256 setID) public view returns (string memory) {
-    require(setID < _nextPeriodID, "Set doesn't exist.");
+  function getSetName(uint256 periodID) public view returns (string memory) {
+    require(periodID < _nextPeriodID, "Period doesn't exist.");
 
-    return _periods[setID].name;
+    return _periods[periodID].name;
   }
 
-  function getSetSeries(uint256 setID) public view returns (uint256) {
-    require(setID < _nextPeriodID, "Set doesn't exist.");
+  function getSetSeries(uint256 periodID) public view returns (uint256) {
+    require(periodID < _nextPeriodID, "Period doesn't exist.");
 
-    return _periods[setID].series;
+    return _periods[periodID].series;
   }
 
-  function getDNAsInSet(uint256 setID) public view returns (uint256[] memory) {
-    require(setID < _nextPeriodID, "Set doesn't exist.");
+  function getDNAsInSet(uint256 periodID) public view returns (uint256[] memory) {
+    require(periodID < _nextPeriodID, "Period doesn't exist.");
 
-    return _periods[setID].dnas;
+    return _periods[periodID].dnas;
   }
 
-  function isSetLocked(uint256 setID) public view returns (bool) {
-    require(setID < _nextPeriodID, "Set doesn't exist.");
+  function isSetLocked(uint256 periodID) public view returns (bool) {
+    require(periodID < _nextPeriodID, "Period doesn't exist.");
 
-    return _periods[setID].locked;
+    return _periods[periodID].locked;
   }
 
   function getNextDNAID() public view returns (uint256) {
     return _nextDNAID;
   }
 
-  function getNextSetID() public view returns (uint256) {
+  function getNextPeriodID() public view returns (uint256) {
     return _nextPeriodID;
   }
 
