@@ -19,8 +19,8 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   event DNACreated(uint256 indexed id);
   event NewSeriesStarted(uint256 indexed new_currentSeries);
   event PeriodCreated(uint256 indexed periodID, uint256 indexed series);
-  event DNAAddedToSet(uint256 indexed periodID, uint256 indexed dnaID);
-  event DNARetiredFromSet(uint256 indexed periodID, uint256 indexed dnaID, uint256 numClones);
+  event DNAAddedToPeriod(uint256 indexed periodID, uint256 indexed dnaID);
+  event DNARetiredFromPeriod(uint256 indexed periodID, uint256 indexed dnaID, uint256 numClones);
   event PeriodLocked(uint256 indexed periodID);
   event YaklonCloned(uint256 indexed cloneID, uint256 indexed dnaID, uint256 indexed periodID, uint256 serialNumber);
   event YaklonDestroyed(uint256 indexed id);
@@ -85,42 +85,42 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function addDNAToSet(uint256 periodID, uint256 dnaID) public onlyOwner {
+  function addDNAToPeriod(uint256 periodID, uint256 dnaID) public onlyOwner {
     require(dnaID < _nextDNAID, "Cannot add the dna to Period: DNA doesn't exist.");
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
-    require(!_periods[periodID].locked, "Cannot add the dna to the Period after the set has been locked.");
-    require(_periods[periodID].added[dnaID] == false, "Cannot add the dna to Period: The dna has already been added to the set.");
+    require(!_periods[periodID].locked, "Cannot add the dna to the Period after the period has been locked.");
+    require(_periods[periodID].added[dnaID] == false, "Cannot add the dna to Period: The dna has already been added to the period.");
 
-    Period storage set = _periods[periodID];
-    set.dnas.push(dnaID);
-    set.retired[dnaID] = false;
-    set.added[dnaID] = true;
-    emit DNAAddedToSet(periodID, dnaID);
+    Period storage period = _periods[periodID];
+    period.dnas.push(dnaID);
+    period.retired[dnaID] = false;
+    period.added[dnaID] = true;
+    emit DNAAddedToPeriod(periodID, dnaID);
   }
 
-  function addDNAsToSet(uint256 periodID, uint256[] memory dnaIDs) public onlyOwner {
+  function addDNAsToPeriod(uint256 periodID, uint256[] memory dnaIDs) public onlyOwner {
     for (uint256 i = 0; i < dnaIDs.length; i++) {
-      addDNAToSet(periodID, dnaIDs[i]);
+      addDNAToPeriod(periodID, dnaIDs[i]);
     }
   }
 
-  function retireDNAFromSet(uint256 periodID, uint256 dnaID) public onlyOwner {
+  function retireDNAFromPeriod(uint256 periodID, uint256 dnaID) public onlyOwner {
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
 
     if (!_periods[periodID].retired[dnaID]) {
       _periods[periodID].retired[dnaID] = true;
-      emit DNARetiredFromSet(periodID, dnaID, _periods[periodID].numberMintedPerDNA[dnaID]);
+      emit DNARetiredFromPeriod(periodID, dnaID, _periods[periodID].numberMintedPerDNA[dnaID]);
     }
   }
 
-  function retireAllFromSet(uint256 periodID) public onlyOwner {
+  function retireAllFromPeriod(uint256 periodID) public onlyOwner {
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
     for (uint256 i = 0; i < _periods[periodID].dnas.length; i++) {
-      retireDNAFromSet(periodID, _periods[periodID].dnas[i]);
+      retireDNAFromPeriod(periodID, _periods[periodID].dnas[i]);
     }
   }
 
-  function lockSet(uint256 periodID) public onlyOwner {
+  function lockPeriod(uint256 periodID) public onlyOwner {
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
 
     if (!_periods[periodID].locked) {
@@ -138,15 +138,15 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     require(periodID < _nextPeriodID, "Cannot clone the dna: Period doesn't exist.");
     require(dnaID < _nextDNAID, "Cannot clone the dna: DNA doesn't exist.");
     require(!_periods[periodID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
-    Period storage set = _periods[periodID];
-    set.numberMintedPerDNA[dnaID] += 1;
+    Period storage period = _periods[periodID];
+    period.numberMintedPerDNA[dnaID] += 1;
     DNA storage dna = _dnas[dnaID];
-    uint256 randomFrom = rand(set.end - set.start) + set.start;
+    uint256 randomFrom = rand(period.end - period.start) + period.start;
     uint256 randomScale = (rand(dna.scale * 2) + dna.scale * 9) / 10;
     uint256 cost = randomFrom * randomScale * (10 ** (dna.level - 1));
     require(_token.balanceOf(msg.sender) >= cost, "Cannot clone the dna: Your balance is running low.");
     _token.transferFrom(msg.sender, address(this), cost);
-    uint256 serialNumber = set.numberMintedPerDNA[dnaID];
+    uint256 serialNumber = period.numberMintedPerDNA[dnaID];
     uint256 cloneID = _nextCloneID;
     Yaklon storage newClone = _yaklons[cloneID];
     newClone.cloneID = cloneID;
@@ -175,16 +175,16 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   }
 
   function createPeriod(string memory name, uint256 start, uint256 end) public onlyOwner returns (uint256) {
-    require(bytes(name).length > 0, "Cannot create this set: Name doesn't been null.");
-    require(end > start, "Cannot create this set: end should greater than start.");
+    require(bytes(name).length > 0, "Cannot create this period: Name doesn't been null.");
+    require(end > start, "Cannot create this period: end should greater than start.");
 
     uint256 newID = _nextPeriodID;
-    Period storage newSet = _periods[newID];
-    newSet.periodID = _nextPeriodID;
-    newSet.name = name;
-    newSet.start = start;
-    newSet.end = end;
-    newSet.series = _currentSeries;
+    Period storage newPeriod = _periods[newID];
+    newPeriod.periodID = _nextPeriodID;
+    newPeriod.name = name;
+    newPeriod.start = start;
+    newPeriod.end = end;
+    newPeriod.series = _currentSeries;
     emit PeriodCreated(_nextPeriodID, _currentSeries);
     _nextPeriodID += 1;
     return newID;
@@ -215,25 +215,25 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _yaklons[cloneID].metadata;
   }
 
-  function getSetName(uint256 periodID) public view returns (string memory) {
+  function getPeriodName(uint256 periodID) public view returns (string memory) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
 
     return _periods[periodID].name;
   }
 
-  function getSetSeries(uint256 periodID) public view returns (uint256) {
+  function getPeriodSeries(uint256 periodID) public view returns (uint256) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
 
     return _periods[periodID].series;
   }
 
-  function getDNAsInSet(uint256 periodID) public view returns (uint256[] memory) {
+  function getDNAsInPeriod(uint256 periodID) public view returns (uint256[] memory) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
 
     return _periods[periodID].dnas;
   }
 
-  function isSetLocked(uint256 periodID) public view returns (bool) {
+  function isPeriodLocked(uint256 periodID) public view returns (bool) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
 
     return _periods[periodID].locked;
