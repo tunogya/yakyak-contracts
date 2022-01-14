@@ -222,28 +222,16 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _yaklons[cloneID].metadata;
   }
 
-  function getPeriodName(uint256 periodID) public view returns (string memory) {
+  function getPeriodData(uint256 periodID) public view returns (string memory name, uint256 series, uint256 start, uint256 end, bool isLocked) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
-
-    return _periods[periodID].name;
-  }
-
-  function getPeriodSeries(uint256 periodID) public view returns (uint256) {
-    require(periodID < _nextPeriodID, "Period doesn't exist.");
-
-    return _periods[periodID].series;
+    Period storage period = _periods[periodID];
+    return (period.name, period.series, period.start, period.end, period.locked);
   }
 
   function getDNAsInPeriod(uint256 periodID) public view returns (uint256[] memory) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
 
     return _periods[periodID].dnas;
-  }
-
-  function isPeriodLocked(uint256 periodID) public view returns (bool) {
-    require(periodID < _nextPeriodID, "Period doesn't exist.");
-
-    return _periods[periodID].locked;
   }
 
   function getNextDNAID() public view returns (uint256) {
