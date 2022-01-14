@@ -200,7 +200,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
 
   function withdraw(uint256 amount) public onlyOwner payable {
     require(amount <= address(this).balance, "Sorry, the balance is running low!");
-    payable(msg.sender).transfer(msg.value);
+    payable(msg.sender).transfer(amount);
     emit Withdraw(msg.sender, amount);
   }
 
