@@ -10,17 +10,17 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   ERC20 private _token;
 
   constructor(address tokenAddress_) ERC721("Yaklon", "YAKLON") {
-    _nextDNAID = 0;
+    _nextDnaID = 0;
     _nextPeriodID = 0;
     _nextCloneID = 0;
     _token = ERC20(tokenAddress_);
   }
 
-  event DNACreated(uint256 indexed id);
+  event DnaCreated(uint256 indexed id);
   event NewSeriesStarted(uint256 indexed new_currentSeries);
   event PeriodCreated(uint256 indexed periodID, uint256 indexed series);
-  event DNAAddedToPeriod(uint256 indexed periodID, uint256 indexed dnaID);
-  event DNARetiredFromPeriod(uint256 indexed periodID, uint256 indexed dnaID, uint256 numClones);
+  event DnaAddedToPeriod(uint256 indexed periodID, uint256 indexed dnaID);
+  event DnaRetiredFromPeriod(uint256 indexed periodID, uint256 indexed dnaID, uint256 numClones);
   event PeriodLocked(uint256 indexed periodID);
   event YaklonCloned(uint256 indexed cloneID, uint256 indexed dnaID, uint256 indexed periodID, uint256 serialNumber);
   event YaklonDestroyed(uint256 indexed id);
@@ -31,7 +31,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   mapping(uint256 => DNA) private _dnas;
   mapping(uint256 => Period) private _periods;
   mapping(uint256 => Yaklon) private _yaklons;
-  uint256 private _nextDNAID;
+  uint256 private _nextDnaID;
   uint256 private _nextPeriodID;
   uint256 private _nextCloneID;
 
@@ -62,7 +62,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     mapping(uint256 => bool) retired;
     mapping(uint256 => bool) added;
     bool locked;
-    mapping(uint256 => uint256) numberMintedPerDNA;
+    mapping(uint256 => uint256) numberMintedPerDna;
   }
 
   function totalSupply() public view returns (uint256) {
@@ -86,8 +86,8 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function addDNAToPeriod(uint256 periodID, uint256 dnaID) public onlyOwner {
-    require(dnaID < _nextDNAID, "Cannot add the dna to Period: DNA doesn't exist.");
+  function addDnaToPeriod(uint256 periodID, uint256 dnaID) public onlyOwner {
+    require(dnaID < _nextDnaID, "Cannot add the dna to Period: DNA doesn't exist.");
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
     require(!_periods[periodID].locked, "Cannot add the dna to the Period after the period has been locked.");
     require(_periods[periodID].added[dnaID] == false, "Cannot add the dna to Period: The dna has already been added to the period.");
@@ -96,28 +96,28 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     period.dnas.push(dnaID);
     period.retired[dnaID] = false;
     period.added[dnaID] = true;
-    emit DNAAddedToPeriod(periodID, dnaID);
+    emit DnaAddedToPeriod(periodID, dnaID);
   }
 
-  function addDNAsToPeriod(uint256 periodID, uint256[] memory dnaIDs) public onlyOwner {
+  function addDnasToPeriod(uint256 periodID, uint256[] memory dnaIDs) public onlyOwner {
     for (uint256 i = 0; i < dnaIDs.length; i++) {
-      addDNAToPeriod(periodID, dnaIDs[i]);
+      addDnaToPeriod(periodID, dnaIDs[i]);
     }
   }
 
-  function retireDNAFromPeriod(uint256 periodID, uint256 dnaID) public onlyOwner {
+  function retireDnaFromPeriod(uint256 periodID, uint256 dnaID) public onlyOwner {
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
 
     if (!_periods[periodID].retired[dnaID]) {
       _periods[periodID].retired[dnaID] = true;
-      emit DNARetiredFromPeriod(periodID, dnaID, _periods[periodID].numberMintedPerDNA[dnaID]);
+      emit DnaRetiredFromPeriod(periodID, dnaID, _periods[periodID].numberMintedPerDna[dnaID]);
     }
   }
 
   function retireAllFromPeriod(uint256 periodID) public onlyOwner {
     require(periodID < _nextPeriodID, "Cannot add the dna to Period: Period doesn't exist.");
     for (uint256 i = 0; i < _periods[periodID].dnas.length; i++) {
-      retireDNAFromPeriod(periodID, _periods[periodID].dnas[i]);
+      retireDnaFromPeriod(periodID, _periods[periodID].dnas[i]);
     }
   }
 
@@ -137,17 +137,17 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
 
   function cloning(uint256 periodID, uint256 dnaID, string memory metadata) public payable {
     require(periodID < _nextPeriodID, "Cannot clone the dna: Period doesn't exist.");
-    require(dnaID < _nextDNAID, "Cannot clone the dna: DNA doesn't exist.");
+    require(dnaID < _nextDnaID, "Cannot clone the dna: DNA doesn't exist.");
     require(!_periods[periodID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
     Period storage period = _periods[periodID];
-    period.numberMintedPerDNA[dnaID] += 1;
+    period.numberMintedPerDna[dnaID] += 1;
     DNA storage dna = _dnas[dnaID];
     uint256 randomFrom = rand((period.end - period.start), msg.value) + period.start;
     uint256 randomScale = (rand(dna.scale * 2, msg.value) + dna.scale * 9) / 10;
     uint256 cost = randomFrom * randomScale * (10 ** (dna.level - 1));
     require(_token.balanceOf(msg.sender) >= cost, "Cannot clone the dna: Your balance is running low.");
     _token.transferFrom(msg.sender, address(this), cost);
-    uint256 serialNumber = period.numberMintedPerDNA[dnaID];
+    uint256 serialNumber = period.numberMintedPerDna[dnaID];
     uint256 cloneID = _nextCloneID;
     Yaklon storage newClone = _yaklons[cloneID];
     newClone.cloneID = cloneID;
@@ -162,16 +162,16 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     _nextCloneID += 1;
   }
 
-  function createDNA(string memory metadata, uint256 weight, uint8 level) public onlyOwner returns (uint256) {
+  function createDna(string memory metadata, uint256 weight, uint8 level) public onlyOwner returns (uint256) {
     require(bytes(metadata).length > 0, "Cannot create this dna: Metadata doesn't been null.");
-    uint256 newID = _nextDNAID;
-    DNA storage newDNA = _dnas[newID];
-    newDNA.dnaID = newID;
-    newDNA.metadata = metadata;
-    newDNA.scale = weight;
-    newDNA.level = level;
-    emit DNACreated(newID);
-    _nextDNAID += 1;
+    uint256 newID = _nextDnaID;
+    DNA storage newDna = _dnas[newID];
+    newDna.dnaID = newID;
+    newDna.metadata = metadata;
+    newDna.scale = weight;
+    newDna.level = level;
+    emit DnaCreated(newID);
+    _nextDnaID += 1;
     return newID;
   }
 
@@ -210,10 +210,10 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     emit WithdrawToken(msg.sender, amount);
   }
 
-  function getDNAMetadata(uint256 dnaID) public view returns (string memory) {
-    require(dnaID < _nextDNAID, "DNA doesn't exist.");
-
-    return _dnas[dnaID].metadata;
+  function getDnaData(uint256 dnaID) public view returns (uint256 scale, uint8 level, string memory metadata) {
+    require(dnaID < _nextDnaID, "DNA doesn't exist.");
+    DNA storage dna = _dnas[dnaID];
+    return (dna.scale, dna.level, dna.metadata);
   }
 
   function tokenURI(uint256 cloneID) public override view returns (string memory) {
@@ -228,14 +228,14 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return (period.name, period.series, period.start, period.end, period.locked);
   }
 
-  function getDNAsInPeriod(uint256 periodID) public view returns (uint256[] memory) {
+  function getDnasInPeriod(uint256 periodID) public view returns (uint256[] memory) {
     require(periodID < _nextPeriodID, "Period doesn't exist.");
 
     return _periods[periodID].dnas;
   }
 
-  function getNextDNAID() public view returns (uint256) {
-    return _nextDNAID;
+  function getNextDnaID() public view returns (uint256) {
+    return _nextDnaID;
   }
 
   function getNextPeriodID() public view returns (uint256) {
