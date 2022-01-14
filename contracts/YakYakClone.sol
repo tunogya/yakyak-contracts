@@ -25,6 +25,7 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   event YaklonCloned(uint256 indexed cloneID, uint256 indexed dnaID, uint256 indexed periodID, uint256 serialNumber);
   event YaklonDestroyed(uint256 indexed id);
   event Withdraw(address indexed account, uint256 amount);
+  event WithdrawToken(address indexed account, uint256 amount);
 
   uint256 private _currentSeries;
   mapping(uint256 => DNA) private _dnas;
@@ -129,20 +130,20 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     }
   }
 
-  function rand(uint256 _length) public view returns (uint256) {
-    uint256 random = uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
+  function rand(uint256 _length, uint256 _nonce) public view returns (uint256) {
+    uint256 random = uint256(keccak256(abi.encodePacked(_nextCloneID, msg.sender, _nonce)));
     return random % _length;
   }
 
-  function cloning(uint256 periodID, uint256 dnaID, string memory metadata) public {
+  function cloning(uint256 periodID, uint256 dnaID, string memory metadata) public payable {
     require(periodID < _nextPeriodID, "Cannot clone the dna: Period doesn't exist.");
     require(dnaID < _nextDNAID, "Cannot clone the dna: DNA doesn't exist.");
     require(!_periods[periodID].retired[dnaID], "Cannot clone the dna: DNA has been retired.");
     Period storage period = _periods[periodID];
     period.numberMintedPerDNA[dnaID] += 1;
     DNA storage dna = _dnas[dnaID];
-    uint256 randomFrom = rand(period.end - period.start) + period.start;
-    uint256 randomScale = (rand(dna.scale * 2) + dna.scale * 9) / 10;
+    uint256 randomFrom = rand((period.end - period.start), msg.value) + period.start;
+    uint256 randomScale = (rand(dna.scale * 2, msg.value) + dna.scale * 9) / 10;
     uint256 cost = randomFrom * randomScale * (10 ** (dna.level - 1));
     require(_token.balanceOf(msg.sender) >= cost, "Cannot clone the dna: Your balance is running low.");
     _token.transferFrom(msg.sender, address(this), cost);
@@ -197,10 +198,16 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _currentSeries;
   }
 
-  function withdraw(address to, uint256 amount) public onlyOwner {
-    require(amount <= _token.balanceOf(address(this)), "Sorry, the balance is running low!");
-    _token.transfer(to, amount);
+  function withdraw(uint256 amount) public onlyOwner payable {
+    require(amount <= address(this).balance, "Sorry, the balance is running low!");
+    payable(msg.sender).transfer(msg.value);
     emit Withdraw(msg.sender, amount);
+  }
+
+  function withdrawToken(uint256 amount) public onlyOwner {
+    require(amount <= _token.balanceOf(address(this)), "Sorry, the balance is running low!");
+    _token.transfer(msg.sender, amount);
+    emit WithdrawToken(msg.sender, amount);
   }
 
   function getDNAMetadata(uint256 dnaID) public view returns (string memory) {
