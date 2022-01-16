@@ -71,6 +71,10 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     return _nftBaseURI;
   }
 
+  function getBaseURI() public view returns (string memory) {
+    return _nftBaseURI;
+  }
+
   function updateBaseURI(string memory newBaseURI) public onlyOwner {
     _nftBaseURI = newBaseURI;
     emit BaseURIUpdate(newBaseURI);

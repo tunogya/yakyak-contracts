@@ -27,7 +27,8 @@ async function main() {
   const Yaklon = await ethers.getContractFactory("YakYakClone");
   // const clone = await Yaklon.deploy(rewards.address);
   const clone = await Yaklon.deploy(
-    "0x8678a05fC4d51a47BEBFDb5446171037de605f25"
+    "0x8678a05fC4d51a47BEBFDb5446171037de605f25",
+    "https://yakyak.eth/"
   );
   await clone.deployed();
   console.log("YakYak Clone deployed to:", clone.address);
