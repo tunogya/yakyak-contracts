@@ -1,18 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./YakYakRewards.sol";
 
-contract YakYakClone is ERC721, ERC721Burnable, Ownable {
-  YakYakRewards private _token;
+contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+  address private _token;
   State private _state;
   string private _nftBaseURI;
 
-  constructor(address tokenAddress_, string memory nftBaseURI_) ERC721("Yaklon", "YAKLON") {
-    _token = YakYakRewards(tokenAddress_);
+  /// @custom:oz-upgrades-unsafe-allow constructor
+  constructor() initializer {}
+
+  function initialize(address tokenAddress_, string memory nftBaseURI_) initializer public {
+    __ERC721_init("Yaklon", "YAKLON");
+    __ERC721Burnable_init();
+    __Ownable_init();
+    __UUPSUpgradeable_init();
+
+    _token = tokenAddress_;
     _nftBaseURI = nftBaseURI_;
   }
 
@@ -63,8 +73,18 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     mapping(uint64 => uint256) minted;
   }
 
+  function _authorizeUpgrade(address newImplementation)
+  internal
+  onlyOwner
+  override
+  {}
+
   function totalSupply() public view returns (uint256) {
     return _state.nextYaklonID;
+  }
+
+  function getToken() public view returns (address) {
+    return _token;
   }
 
   function _baseURI() internal view override returns (string memory) {
@@ -153,8 +173,10 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
     emit YaklonMinted(tokenID, dnaID, setID, serialID);
   }
 
-  function batchCloning(uint64 setID, uint64 dnaID, uint256 amount) public payable {
-    for (uint256 i = 0; i < amount; i++) {
+  function batchCloning(uint64 setID, uint64 dnaID, uint32 amount) public payable {
+    require(msg.value >= 0.01 ether * amount, "Clone Fee is 0.01 ether per Yaklone.");
+
+    for (uint32 i = 0; i < amount; i++) {
       cloning(setID, dnaID);
     }
   }
@@ -222,8 +244,8 @@ contract YakYakClone is ERC721, ERC721Burnable, Ownable {
   }
 
   function feeding(uint256 tokenID, uint256 amount) public {
-    require(_token.balanceOf(msg.sender) >= amount, "Your balance is running low.");
-    _token.burnFrom(msg.sender, amount);
+    require(YakYakRewards(_token).balanceOf(msg.sender) >= amount, "Your balance is running low.");
+    YakYakRewards(_token).burnFrom(msg.sender, amount);
     _nfts[tokenID].feed += amount;
     emit YaklonFed(tokenID, amount);
   }

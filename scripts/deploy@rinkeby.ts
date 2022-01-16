@@ -25,7 +25,6 @@ async function main() {
   // console.log("YakYak Bank deployed to:", bank.address);
   // YakYak Bank: 0x3705b5eA8AB6cf63dC25e5DFE5AF37E71Bf8d9B5
   const Yaklon = await ethers.getContractFactory("YakYakClone");
-  // const clone = await Yaklon.deploy(rewards.address);
   const clone = await Yaklon.deploy(
     "0x8678a05fC4d51a47BEBFDb5446171037de605f25",
     "https://yakyak.eth/"
