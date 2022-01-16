@@ -33,7 +33,18 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  defaultNetwork: "ganache",
   networks: {
+    ganache: {
+      url: "http://127.0.0.1:7545",
+      accounts: {
+        mnemonic:
+          "enjoy portion escape stay leader mind good chair motor coach verb check",
+        path: "m/44'/60'/0'/0",
+        initialIndex: 0,
+        count: 10,
+      },
+    },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
       accounts:

@@ -3,7 +3,7 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 
 async function main() {
   // Prepare to deploy
@@ -24,14 +24,20 @@ async function main() {
   // await bank.deployed();
   // console.log("YakYak Bank deployed to:", bank.address);
   // YakYak Bank: 0x3705b5eA8AB6cf63dC25e5DFE5AF37E71Bf8d9B5
-  const Yaklon = await ethers.getContractFactory("YakYakClone");
-  const clone = await Yaklon.deploy(
-    "0x8678a05fC4d51a47BEBFDb5446171037de605f25",
-    "https://yakyak.eth/"
+  const Yaklon = await ethers.getContractFactory("Yaklon");
+  const clone = await upgrades.deployProxy(
+    Yaklon,
+    [
+      "0x8678a05fC4d51a47BEBFDb5446171037de605f25",
+      "https://yakyak.wakanda-labs.com/",
+    ],
+    {
+      initializer: "initialize",
+      kind: "uups",
+    }
   );
   await clone.deployed();
   console.log("YakYak Clone deployed to:", clone.address);
-  // YakYak Clone deployed to: 0xb99B89b56FFaF1b71c646bC16D50705Eb1a40223
 }
 
 // We recommend this pattern to be able to use async/await everywhere
