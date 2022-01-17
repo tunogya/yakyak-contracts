@@ -249,4 +249,21 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
     _nfts[tokenID].feed += amount;
     emit YaklonFed(tokenID, amount);
   }
+
+  function getSeriesSet(uint64 seriesID) public view returns (uint64[] memory) {
+    require(seriesID <= _state.currentSeries, "The seriesID is not exist.");
+
+    uint64[] memory setsList = new uint64[](_state.currentSeries);
+    uint64 i = 0;
+    uint64 setID = 0;
+    while (setID < _state.nextSetID) {
+      if (_sets[setID].series == seriesID){
+        setsList[i] = setID;
+        i++;
+      }
+      setID++;
+    }
+
+    return setsList;
+  }
 }
