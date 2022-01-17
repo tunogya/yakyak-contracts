@@ -24,6 +24,10 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
 
     _token = tokenAddress_;
     _nftBaseURI = nftBaseURI_;
+    _state.nextSetID = 1;
+    _state.nextDnaID = 1;
+    _state.nextYaklonID = 1;
+    _state.currentSeries = 1;
   }
 
   event DnaCreated(uint64 indexed id);
@@ -113,8 +117,8 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   }
 
   function addDnaToSet(uint64 setID, uint64 dnaID) public onlyOwner {
-    require(dnaID < _state.nextDnaID, "DNA doesn't exist.");
-    require(setID < _state.nextSetID, "Set doesn't exist.");
+    require(dnaID < _state.nextDnaID && dnaID > 0, "DNA doesn't exist.");
+    require(setID < _state.nextSetID && setID > 0, "Set doesn't exist.");
     require(!_sets[setID].locked, "The set has been locked.");
     require(_sets[setID].added[dnaID] == false, "The dna has already been added to the set.");
 
@@ -156,8 +160,8 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   }
 
   function cloning(uint64 setID, uint64 dnaID) public payable {
-    require(setID < _state.nextSetID, "Set doesn't exist.");
-    require(dnaID < _state.nextDnaID, "DNA doesn't exist.");
+    require(setID < _state.nextSetID && setID > 0, "Set doesn't exist.");
+    require(dnaID < _state.nextDnaID && dnaID > 0, "DNA doesn't exist.");
     require(!_sets[setID].retired[dnaID], "DNA has been retired.");
     require(msg.value >= 0.01 ether, "Clone Fee is 0.01 ether per Yaklone.");
 
@@ -174,6 +178,9 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   }
 
   function batchCloning(uint64 setID, uint64 dnaID, uint32 amount) public payable {
+    require(setID < _state.nextSetID && setID > 0, "Set doesn't exist.");
+    require(dnaID < _state.nextDnaID && dnaID > 0, "DNA doesn't exist.");
+    require(amount > 0, "Cloning amount can not be zero.");
     require(msg.value >= 0.01 ether * amount, "Clone Fee is 0.01 ether per Yaklone.");
 
     for (uint32 i = 0; i < amount; i++) {
@@ -212,30 +219,39 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
 
   function withdraw(uint256 amount) public onlyOwner payable {
     require(amount <= address(this).balance, "The contract's balance is running low.");
+
     payable(msg.sender).transfer(amount);
     emit Withdraw(msg.sender, amount);
   }
 
   function getDnaData(uint64 dnaID) public view returns (string memory metadata) {
-    require(dnaID < _state.nextDnaID, "DNA doesn't exist.");
+    require(dnaID < _state.nextDnaID && dnaID > 0, "DNA doesn't exist.");
+
     return _dnas[dnaID].metadata;
   }
 
   function getSetData(uint64 setID) public view returns (string memory name, uint64 series, bool locked) {
-    require(setID < _state.nextSetID, "Set doesn't exist.");
+    require(setID < _state.nextSetID && setID > 0, "Set doesn't exist.");
+
     return (_sets[setID].name, _sets[setID].series, _sets[setID].locked);
   }
 
   function getDnasInSet(uint64 setID) public view returns (uint64[] memory) {
-    require(setID < _state.nextSetID, "Set doesn't exist.");
+    require(setID < _state.nextSetID && setID > 0, "Set doesn't exist.");
+
     return _sets[setID].dnas;
   }
 
   function getDnaMintedInSet(uint64 setID, uint64 dnaID) public view returns (uint256) {
+    require(setID < _state.nextSetID && setID > 0, "Set doesn't exist.");
+    require(dnaID < _state.nextDnaID && dnaID > 0, "DNA doesn't exist.");
+
     return _sets[setID].minted[dnaID];
   }
 
   function getNftMetadata(uint256 tokenID) public view returns (uint256 serialID, uint256 feed, uint64 dnaID, uint64 setID) {
+    require(tokenID < _state.nextYaklonID && tokenID > 0, "Yaklon doesn't exist.");
+
     return (_nfts[tokenID].serialID, _nfts[tokenID].feed, _nfts[tokenID].dnaID, _nfts[tokenID].setID);
   }
 
@@ -244,14 +260,17 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   }
 
   function feeding(uint256 tokenID, uint256 amount) public {
+    require(tokenID < _state.nextYaklonID && tokenID > 0, "Yaklon doesn't exist.");
+
     require(YakYakRewards(_token).balanceOf(msg.sender) >= amount, "Your balance is running low.");
+
     YakYakRewards(_token).burnFrom(msg.sender, amount);
     _nfts[tokenID].feed += amount;
     emit YaklonFed(tokenID, amount);
   }
 
   function getSeriesSet(uint64 seriesID) public view returns (uint64[] memory) {
-    require(seriesID <= _state.currentSeries, "The seriesID is not exist.");
+    require(seriesID <= _state.currentSeries && seriesID > 0, "The seriesID is not exist.");
 
     uint64[] memory setsList = new uint64[](_state.nextSetID);
     uint64 i = 0;
