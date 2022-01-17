@@ -19,6 +19,7 @@ async function main() {
     Yaklon
   );
   await cloneV2.deployed();
+  console.log("Upgraded Yaklon");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
