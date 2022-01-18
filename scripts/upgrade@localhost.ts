@@ -15,7 +15,7 @@ async function main() {
   );
   const Yaklon = await ethers.getContractFactory("Yaklon");
   const cloneV2 = await upgrades.upgradeProxy(
-    "0x5274AD8f663406cFEb7b879Daf8b28D099F00455",
+    "0x9ebFeBf014Fc4fC254906EcB6ee43f47907D9704",
     Yaklon
   );
   await cloneV2.deployed();
