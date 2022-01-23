@@ -274,7 +274,7 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
 
     uint64[] memory setsList = new uint64[](_state.nextSetID);
     uint64 i = 0;
-    uint64 setID = 0;
+    uint64 setID = 1;
     while (setID < _state.nextSetID) {
       if (_sets[setID].series == seriesID){
         setsList[i] = setID;
