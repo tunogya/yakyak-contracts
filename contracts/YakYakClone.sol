@@ -84,7 +84,7 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   {}
 
   function totalSupply() public view returns (uint256) {
-    return _state.nextYaklonID;
+    return _state.nextYaklonID - 1;
   }
 
   function getToken() public view returns (address) {
