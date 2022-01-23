@@ -272,7 +272,7 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   function getSeriesSet(uint64 seriesID) public view returns (uint64[] memory) {
     require(seriesID <= _state.currentSeries && seriesID > 0, "The seriesID is not exist.");
 
-    uint64[] memory setsList = new uint64[](_state.nextSetID);
+    uint64[] memory setsList = new uint64[](_state.nextSetID - 1);
     uint64 i = 0;
     uint64 setID = 1;
     while (setID < _state.nextSetID) {
