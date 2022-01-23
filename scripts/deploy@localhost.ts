@@ -34,6 +34,13 @@ async function main() {
   );
   await clone.deployed();
   console.log("YakYak Clone deployed to:", clone.address);
+  const DAO = await ethers.getContractFactory("YakYakDao");
+  const dao = await upgrades.deployProxy(DAO, [rewards.address], {
+    initializer: "initialize",
+    kind: "uups",
+  });
+  await dao.deployed();
+  console.log("YakYak Clone deployed to:", dao.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
