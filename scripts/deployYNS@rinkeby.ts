@@ -24,6 +24,7 @@ async function main() {
   await resolver.deployed();
   console.log("resolver: ", resolver.address); // 0x92ABfC191362ADa53f37104Ce9D9DB5A59a3d14b
   await setupResolver(ens, resolver, accounts);
+  console.log("namehash: ", namehash.hash(tld)); // 0xabf11df72c3ff78aa82ec8e802807315c444ccd13be1a446b7b15aee3a913e4e
   const registrar = await FIFSRegistrar.deploy(ens.address, namehash.hash(tld));
   await registrar.deployed();
   console.log("registrar: ", registrar.address); // 0xaCAf3212Cf678c9BfBf8050A73E26752E8Acea80
