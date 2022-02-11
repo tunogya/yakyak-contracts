@@ -7,19 +7,20 @@ import { ethers, upgrades } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  console.log("Deploying account:", await deployer.getAddress());
+  console.log("Deploying account: ", await deployer.getAddress());
   console.log(
-    "Deploying account balance:",
-    (await deployer.getBalance()).toString(),
-    "\n"
+    "Deploying account balance: ",
+    (await deployer.getBalance()).toString()
   );
-  const Yaklon = await ethers.getContractFactory("Yaklon");
-  const cloneV2 = await upgrades.upgradeProxy(
-    "0x9ebFeBf014Fc4fC254906EcB6ee43f47907D9704",
-    Yaklon
-  );
-  await cloneV2.deployed();
-  console.log("Upgraded Yaklon");
+  const Rewards = await ethers.getContractFactory("Rewards");
+  const rewards = Rewards.attach("");
+  const DAO = await ethers.getContractFactory("DAO");
+  const dao = await upgrades.deployProxy(DAO, [rewards.address], {
+    initializer: "initialize",
+    kind: "uups",
+  });
+  await dao.deployed();
+  console.log("DAO deployed to:", dao.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

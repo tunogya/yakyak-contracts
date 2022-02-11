@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // The organizer will remit the tokens into the prize cashing pool, and issue the prize cashing code signed by owner offline.
 // The winner can cash the prize by himself in the contract.
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract YakYakBank {
+contract Bank {
   event Withdraw(address indexed account, uint256 amount);
   event Deposit(address indexed account, uint256 amount);
   event Redeem(address indexed from, uint256 id, uint256 amount, address indexed casher);

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "./YakYakRewards.sol";
+import "../Token/Rewards.sol";
 
-contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract Clone is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
   address private _token;
   State private _state;
   string private _nftBaseURI;
@@ -17,7 +17,7 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   constructor() initializer {}
 
   function initialize(address tokenAddress_, string memory nftBaseURI_) initializer public {
-    __ERC721_init("Yaklon", "YAKLON");
+    __ERC721_init("Clone", "Clone");
     __ERC721Burnable_init();
     __Ownable_init();
     __UUPSUpgradeable_init();
@@ -262,9 +262,9 @@ contract Yaklon is Initializable, ERC721Upgradeable, ERC721BurnableUpgradeable, 
   function feeding(uint256 tokenID, uint256 amount) public {
     require(tokenID < _state.nextYaklonID && tokenID > 0, "Yaklon doesn't exist.");
 
-    require(YakYakRewards(_token).balanceOf(msg.sender) >= amount, "Your balance is running low.");
+    require(Rewards(_token).balanceOf(msg.sender) >= amount, "Your balance is running low.");
 
-    YakYakRewards(_token).burnFrom(msg.sender, amount);
+    Rewards(_token).burnFrom(msg.sender, amount);
     _nfts[tokenID].feed += amount;
     emit YaklonFed(tokenID, amount);
   }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
@@ -11,12 +11,12 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20FlashMint.sol";
 
 /// @custom:security-contact tunogya@qq.com
-contract YakYakRewards is ERC20, ERC20Burnable, ERC20Snapshot, AccessControl, Pausable, ERC20Permit, ERC20Votes, ERC20FlashMint {
+contract Rewards is ERC20, ERC20Burnable, ERC20Snapshot, AccessControl, Pausable, ERC20Permit, ERC20Votes, ERC20FlashMint {
   bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-  constructor() ERC20("YakYak Rewards", "YKR") ERC20Permit("YakYak Rewards") {
+  constructor() ERC20("Rewards", "RWD") ERC20Permit("Rewards") {
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(SNAPSHOT_ROLE, msg.sender);
     _grantRole(PAUSER_ROLE, msg.sender);
