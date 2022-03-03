@@ -12,8 +12,8 @@ import "./RewardsPool.sol";
 /**
  * @title  YakYak YieldSourcePrizePool
  * @author YakYak Inc Team
- * @notice The Yield Source Prize Pool uses a yield source contract to generate prizes.
- *         Funds that are deposited into the prize pool are then deposited into a yield source. (i.e. Aave, Compound, etc...)
+ * @notice The Yield Source Rewards Pool uses a yield source contract to generate prizes.
+ *         Funds that are deposited into the rewards pool are then deposited into a yield source. (i.e. Aave, Compound, etc...)
  */
 contract YieldSourceRewardsPool is RewardsPool {
     using SafeERC20 for IERC20;
@@ -22,7 +22,7 @@ contract YieldSourceRewardsPool is RewardsPool {
     /// @notice Address of the yield source.
     IYieldSource public immutable yieldSource;
 
-    /// @dev Emitted when yield source prize pool is deployed.
+    /// @dev Emitted when yield source rewards pool is deployed.
     /// @param yieldSource Address of the yield source.
     event Deployed(address indexed yieldSource);
 
@@ -30,8 +30,8 @@ contract YieldSourceRewardsPool is RewardsPool {
     /// @param amount The amount that was swept
     event Swept(uint256 amount);
 
-    /// @notice Deploy the Prize Pool and Yield Service with the required contract connections
-    /// @param _owner Address of the Yield Source Prize Pool owner
+    /// @notice Deploy the Rewards Pool and Yield Service with the required contract connections
+    /// @param _owner Address of the Yield Source Rewards Pool owner
     /// @param _yieldSource Address of the yield source
     constructor(address _owner, IYieldSource _yieldSource) RewardsPool(_owner) {
         require(
@@ -55,7 +55,7 @@ contract YieldSourceRewardsPool is RewardsPool {
     }
 
     /// @notice Sweeps any stray balance of deposit tokens into the yield source.
-    /// @dev This becomes prize money
+    /// @dev This becomes rewards money
     function sweep() external nonReentrant onlyOwner {
         uint256 balance = _token().balanceOf(address(this));
         _supply(balance);
@@ -65,7 +65,7 @@ contract YieldSourceRewardsPool is RewardsPool {
 
     /// @notice Determines whether the passed token can be transferred out as an external award.
     /// @dev Different yield sources will hold the deposits as another kind of token: such a Compound's cToken.  The
-    /// prize strategy should not be allowed to move those tokens.
+    /// rewards strategy should not be allowed to move those tokens.
     /// @param _externalToken The address of the token to check
     /// @return True if the token may be awarded, false otherwise
     function _canAwardExternal(address _externalToken) internal view override returns (bool) {

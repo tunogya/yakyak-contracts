@@ -7,25 +7,25 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./RewardsPool.sol";
 
 /**
- * @title  YakYak StakePrizePool
+ * @title  YakYak StakeRewardsPool
  * @author YakYak Inc Team
- * @notice The Stake Prize Pool is a prize pool in which users can deposit an ERC20 token.
- *         These tokens are simply held by the Stake Prize Pool and become eligible for prizes.
- *         Prizes are added manually by the Stake Prize Pool owner and are distributed to users at the end of the prize period.
+ * @notice The Stake Rewards Pool is a rewards pool in which users can deposit an ERC20 token.
+ *         These tokens are simply held by the Stake Rewards Pool and become eligible for prizes.
+ *         Rewards are added manually by the Stake Rewards Pool owner and are distributed to users at the end of the rewards period.
  */
 contract StakeRewardsPool is RewardsPool {
   /// @notice Address of the stake token.
   IERC20 private stakeToken;
 
-  /// @dev Emitted when stake prize pool is deployed.
+  /// @dev Emitted when stake rewards pool is deployed.
   /// @param stakeToken Address of the stake token.
   event Deployed(IERC20 indexed stakeToken);
 
-  /// @notice Deploy the Stake Prize Pool
-  /// @param _owner Address of the Stake Prize Pool owner
+  /// @notice Deploy the Stake Rewards Pool
+  /// @param _owner Address of the Stake Rewards Pool owner
   /// @param _stakeToken Address of the stake token
   constructor(address _owner, IERC20 _stakeToken) RewardsPool(_owner) {
-    require(address(_stakeToken) != address(0), "StakePrizePool/stake-token-not-zero-address");
+    require(address(_stakeToken) != address(0), "StakeRewardsPool/stake-token-not-zero-address");
     stakeToken = _stakeToken;
 
     emit Deployed(_stakeToken);
@@ -33,7 +33,7 @@ contract StakeRewardsPool is RewardsPool {
 
   /// @notice Determines whether the passed token can be transferred out as an external award.
   /// @dev Different yield sources will hold the deposits as another kind of token: such a Compound's cToken.  The
-  /// prize strategy should not be allowed to move those tokens.
+  /// rewards strategy should not be allowed to move those tokens.
   /// @param _externalToken The address of the token to check
   /// @return True if the token may be awarded, false otherwise
   function _canAwardExternal(address _externalToken) internal view override returns (bool) {

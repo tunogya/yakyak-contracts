@@ -18,8 +18,8 @@ import "../interfaces/IRewardsPool.sol";
 /**
   * @title  YakYak RewardsPool
   * @author YakYak Inc Team
-  * @notice Escrows assets and deposits them into a yield source.  Exposes interest to Prize Strategy.
-            Users deposit and withdraw from this contract to participate in Prize Pool.
+  * @notice Escrows assets and deposits them into a yield source.  Exposes interest to Rewards Strategy.
+            Users deposit and withdraw from this contract to participate in Rewards Pool.
             Accounting is managed using Controlled Tokens, whose mint and burn functions can only be called by this contract.
             Must be inherited to provide specific yield-bearing asset control, such as Compound cTokens
 */
@@ -31,16 +31,16 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   /// @notice Semver Version
   string public constant VERSION = "4.0.0";
 
-  /// @notice Prize Pool ticket. Can only be set once by calling `setTicket()`.
+  /// @notice Rewards Pool ticket. Can only be set once by calling `setTicket()`.
   IPass internal ticket;
 
-  /// @notice The Prize Strategy that this Prize Pool is bound to.
+  /// @notice The Rewards Strategy that this Rewards Pool is bound to.
   address internal prizeStrategy;
 
   /// @notice The total amount of tickets a user can hold.
   uint256 internal balanceCap;
 
-  /// @notice The total amount of funds that the prize pool can hold.
+  /// @notice The total amount of funds that the rewards pool can hold.
   uint256 internal liquidityCap;
 
   /// @notice the The awardable balance
@@ -48,7 +48,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
 
   /* ============ Modifiers ============ */
 
-  /// @dev Function modifier to ensure caller is the prize-strategy
+  /// @dev Function modifier to ensure caller is the rewards-strategy
   modifier onlyPrizeStrategy() {
     require(msg.sender == prizeStrategy, "RewardsPool/only-prizeStrategy");
     _;
@@ -62,8 +62,8 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
 
   /* ============ Constructor ============ */
 
-  /// @notice Deploy the Prize Pool
-  /// @param _owner Address of the Prize Pool owner
+  /// @notice Deploy the Rewards Pool
+  /// @param _owner Address of the Rewards Pool owner
   constructor(address _owner) Ownable(_owner) ReentrancyGuard() {
     _setLiquidityCap(type(uint256).max);
   }
@@ -362,10 +362,10 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     _controlledToken.controllerMint(_to, _amount);
   }
 
-  /// @dev Checks if `user` can deposit in the Prize Pool based on the current balance cap.
+  /// @dev Checks if `user` can deposit in the Rewards Pool based on the current balance cap.
   /// @param _user Address of the user depositing.
-  /// @param _amount The amount of tokens to be deposited into the Prize Pool.
-  /// @return True if the Prize Pool can receive the specified `amount` of tokens.
+  /// @param _amount The amount of tokens to be deposited into the Rewards Pool.
+  /// @return True if the Rewards Pool can receive the specified `amount` of tokens.
   function _canDeposit(address _user, uint256 _amount) internal view returns (bool) {
     uint256 _balanceCap = balanceCap;
 
@@ -374,16 +374,16 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     return (ticket.balanceOf(_user) + _amount <= _balanceCap);
   }
 
-  /// @dev Checks if the Prize Pool can receive liquidity based on the current cap
-  /// @param _amount The amount of liquidity to be added to the Prize Pool
-  /// @return True if the Prize Pool can receive the specified amount of liquidity
+  /// @dev Checks if the Rewards Pool can receive liquidity based on the current cap
+  /// @param _amount The amount of liquidity to be added to the Rewards Pool
+  /// @return True if the Rewards Pool can receive the specified amount of liquidity
   function _canAddLiquidity(uint256 _amount) internal view returns (bool) {
     uint256 _liquidityCap = liquidityCap;
     if (_liquidityCap == type(uint256).max) return true;
     return (_ticketTotalSupply() + _amount <= _liquidityCap);
   }
 
-  /// @dev Checks if a specific token is controlled by the Prize Pool
+  /// @dev Checks if a specific token is controlled by the Rewards Pool
   /// @param _controlledToken The address of the token to check
   /// @return True if the token is a controlled token, false otherwise
   function _isControlled(IPass _controlledToken) internal view returns (bool) {
@@ -404,8 +404,8 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     emit LiquidityCapSet(_liquidityCap);
   }
 
-  /// @notice Sets the prize strategy of the prize pool.  Only callable by the owner.
-  /// @param _prizeStrategy The new prize strategy
+  /// @notice Sets the rewards strategy of the rewards pool.  Only callable by the owner.
+  /// @param _prizeStrategy The new rewards strategy
   function _setPrizeStrategy(address _prizeStrategy) internal {
     require(_prizeStrategy != address(0), "RewardsPool/prizeStrategy-not-zero");
 
@@ -430,7 +430,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
 
   /// @notice Determines whether the passed token can be transferred out as an external award.
   /// @dev Different yield sources will hold the deposits as another kind of token: such a Compound's cToken.  The
-  /// prize strategy should not be allowed to move those tokens.
+  /// rewards strategy should not be allowed to move those tokens.
   /// @param _externalToken The address of the token to check
   /// @return True if the token may be awarded, false otherwise
   function _canAwardExternal(address _externalToken) internal view virtual returns (bool);

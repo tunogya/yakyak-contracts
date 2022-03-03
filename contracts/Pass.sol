@@ -43,7 +43,7 @@ contract Pass is ControlledToken, IPass {
      * @param _name ERC20 Pass token name.
      * @param _symbol ERC20 Pass token symbol.
      * @param decimals_ ERC20 Pass token decimals.
-     * @param _controller ERC20 Pass controller address (ie: Prize Pool address).
+     * @param _controller ERC20 Pass controller address (ie: Rewards Pool address).
      */
     constructor(
         string memory _name,
