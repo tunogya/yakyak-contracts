@@ -5,7 +5,7 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /** @title IControlledToken
-  * @author PoolTogether Inc Team
+  * @author YakYak Inc Team
   * @notice ERC20 Tokens with a controller for minting & burning.
 */
 interface IControlledToken is IERC20 {

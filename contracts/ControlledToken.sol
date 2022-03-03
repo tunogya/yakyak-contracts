@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "./interfaces/IControlledToken.sol";
 
 /**
- * @title  PoolTogether V4 Controlled ERC20 Token
- * @author PoolTogether Inc Team
+ * @title  YakYak Controlled ERC20 Token
+ * @author YakYak Inc Team
  * @notice  ERC20 Tokens with a controller for minting & burning
  */
 contract ControlledToken is ERC20Permit, IControlledToken {
@@ -45,7 +45,7 @@ contract ControlledToken is ERC20Permit, IControlledToken {
         string memory _symbol,
         uint8 decimals_,
         address _controller
-    ) ERC20Permit("PoolTogether ControlledToken") ERC20(_name, _symbol) {
+    ) ERC20Permit("YakYak ControlledToken") ERC20(_name, _symbol) {
         require(address(_controller) != address(0), "ControlledToken/controller-not-zero-address");
         controller = _controller;
 
