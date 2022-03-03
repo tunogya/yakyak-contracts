@@ -30,7 +30,7 @@ contract Pass is ControlledToken, IPass {
     /// @notice Record of token holders TWABs for each account.
     mapping(address => TwabLib.Account) internal userTwabs;
 
-    /// @notice Record of Passs total supply and ring buff parameters used for observation.
+    /// @notice Record of Passes total supply and ring buff parameters used for observation.
     TwabLib.Account internal totalSupplyTwab;
 
     /// @notice Mapping of delegates.  Each address can delegate their Pass power to another.

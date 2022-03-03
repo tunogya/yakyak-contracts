@@ -71,7 +71,7 @@ interface IPass is IControlledToken {
   /**
   * @notice Delegate time-weighted average balances to an alternative address.
     * @dev    Transfers (including mints) trigger the storage of a TWAB in delegate(s) account, instead of the
-              targetted sender and/or recipient address(s).
+              targeted sender and/or recipient address(s).
     * @dev    To reset the delegate, pass the zero address (0x000.000) as `to` parameter.
     * @dev Current delegate address should be different from the new delegate address `to`.
     * @param  to Recipient of delegated TWAB.
