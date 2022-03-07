@@ -23,6 +23,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
+const mnemonic = process.env.HDWALLET_MNEMONIC;
+
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.6",
@@ -47,18 +49,21 @@ const config: HardhatUserConfig = {
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: {
+        mnemonic,
+      },
     },
     arbitrum_rinkeby: {
       url: process.env.ARBITRUM_RINKEBY_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: {
+        mnemonic,
+      },
     },
     bsct: {
       url: process.env.BSCT_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: {
+        mnemonic,
+      },
     },
   },
   gasReporter: {

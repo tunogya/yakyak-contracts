@@ -29,10 +29,10 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   using ERC165Checker for address;
 
   /// @notice Semver Version
-  string public constant VERSION = "4.0.0";
+  string public constant VERSION = "1.0.0";
 
-  /// @notice Rewards Pool ticket. Can only be set once by calling `setTicket()`.
-  IPass internal ticket;
+  /// @notice Rewards Pool pass. Can only be set once by calling `setPass()`.
+  IPass internal pass;
 
   /// @notice The Rewards Strategy that this Rewards Pool is bound to.
   address internal prizeStrategy;
@@ -106,8 +106,8 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   }
 
   /// @inheritdoc IRewardsPool
-  function getTicket() external view override returns (IPass) {
-    return ticket;
+  function getPass() external view override returns (IPass) {
+    return pass;
   }
 
   /// @inheritdoc IRewardsPool
@@ -163,7 +163,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   canAddLiquidity(_amount)
   {
     _depositTo(msg.sender, _to, _amount);
-    ticket.controllerDelegateFor(msg.sender, _delegate);
+    pass.controllerDelegateFor(msg.sender, _delegate);
   }
 
   /// @notice Transfers tokens in from one user and mints tickets to another
@@ -174,7 +174,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   {
     require(_canDeposit(_to, _amount), "RewardsPool/exceeds-balance-cap");
 
-    IPass _ticket = ticket;
+    IPass _ticket = pass;
 
     _token().safeTransferFrom(_operator, address(this), _amount);
 
@@ -191,7 +191,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   nonReentrant
   returns (uint256)
   {
-    IPass _ticket = ticket;
+    IPass _ticket = pass;
 
     // burn the tickets
     _ticket.controllerBurnFrom(msg.sender, _from, _amount);
@@ -220,7 +220,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     _currentAwardBalance = currentAwardBalance - _amount;
   }
 
-    IPass _ticket = ticket;
+    IPass _ticket = pass;
 
     _mint(_to, _amount, _ticket);
 
@@ -291,13 +291,13 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   }
 
   /// @inheritdoc IRewardsPool
-  function setTicket(IPass _ticket) external override onlyOwner returns (bool) {
-    require(address(_ticket) != address(0), "RewardsPool/ticket-not-zero-address");
-    require(address(ticket) == address(0), "RewardsPool/ticket-already-set");
+  function setPass(IPass _pass) external override onlyOwner returns (bool) {
+    require(address(_pass) != address(0), "RewardsPool/pass-not-zero-address");
+    require(address(pass) == address(0), "RewardsPool/pass-already-set");
 
-    ticket = _ticket;
+    pass = _pass;
 
-    emit TicketSet(_ticket);
+    emit PassSet(_pass);
 
     _setBalanceCap(type(uint256).max);
 
@@ -371,7 +371,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
 
     if (_balanceCap == type(uint256).max) return true;
 
-    return (ticket.balanceOf(_user) + _amount <= _balanceCap);
+    return (pass.balanceOf(_user) + _amount <= _balanceCap);
   }
 
   /// @dev Checks if the Rewards Pool can receive liquidity based on the current cap
@@ -387,7 +387,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   /// @param _controlledToken The address of the token to check
   /// @return True if the token is a controlled token, false otherwise
   function _isControlled(IPass _controlledToken) internal view returns (bool) {
-    return (ticket == _controlledToken);
+    return (pass == _controlledToken);
   }
 
   /// @notice Allows the owner to set a balance cap per `token` for the pool.
@@ -415,9 +415,9 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   }
 
   /// @notice The current total of tickets.
-  /// @return Ticket total supply.
+  /// @return Pass total supply.
   function _ticketTotalSupply() internal view returns (uint256) {
-    return ticket.totalSupply();
+    return pass.totalSupply();
   }
 
   /// @dev Gets the current time as represented by the current block
@@ -426,7 +426,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     return block.timestamp;
   }
 
-  /* ============ Abstract Contract Implementatiton ============ */
+  /* ============ Abstract Contract Implementation ============ */
 
   /// @notice Determines whether the passed token can be transferred out as an external award.
   /// @dev Different yield sources will hold the deposits as another kind of token: such a Compound's cToken.  The

@@ -4,21 +4,47 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import chalk from "chalk";
+import { deploy1820 } from "deploy-eip-1820";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  console.log("Deploying account:", await deployer.getAddress());
+  console.log(chalk.dim("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"));
+  console.log(chalk.dim("YakYak Contracts - Deploy Script"));
+  console.log(chalk.dim("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"));
+  console.log(chalk.dim("Deployer:"), await deployer.getAddress());
+  await deploy1820(deployer);
   console.log(
-    "Deploying account balance:",
-    (await deployer.getBalance()).toString()
+    chalk.yellow("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
   );
-  const Rewards = await ethers.getContractFactory("Rewards");
-  const rewards = Rewards.attach("");
-  console.log("Rewards deployed to:", rewards.address);
-  const Bank = await ethers.getContractFactory("Bank");
-  const bank = await Bank.deploy(rewards.address);
-  await bank.deployed();
-  console.log("Bank deployed to:", bank.address);
+  console.log(
+    chalk.yellow("CAUTION: Deploying Prize Pool in a front-runnable way!")
+  );
+  console.log(chalk.cyan("\nDeploying MockYieldSource..."));
+  const MockYieldSource = await ethers.getContractFactory("MockYieldSource");
+  const mockYieldSource = await MockYieldSource.deploy("Yak", "YAK", 18);
+  await mockYieldSource.deployed();
+  console.log(chalk.green("mockYieldSource: ", mockYieldSource.address));
+  console.log(chalk.cyan("\nDeploying YieldSourcePrizePool..."));
+  const YieldSourceRewardsPool = await ethers.getContractFactory(
+    "YieldSourcePrizePool"
+  );
+  const yieldSourcePrizePoolResult = await YieldSourceRewardsPool.deploy(
+    deployer,
+    mockYieldSource.address
+  );
+  console.log(
+    chalk.green("yieldSourcePrizePool: ", yieldSourcePrizePoolResult.address)
+  );
+  console.log(chalk.cyan("\nDeploying Pass..."));
+  const Pass = await ethers.getContractFactory("Pass");
+  const passResult = await Pass.deploy(
+    "Pass",
+    "PASS",
+    18,
+    yieldSourcePrizePoolResult.address
+  );
+  console.log(chalk.green("PassResult: ", passResult.address));
 }
 
 // We recommend this pattern to be able to use async/await everywhere
