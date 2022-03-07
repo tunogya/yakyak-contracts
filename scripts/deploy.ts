@@ -29,22 +29,24 @@ async function main() {
   const YieldSourceRewardsPool = await ethers.getContractFactory(
     "YieldSourcePrizePool"
   );
-  const yieldSourcePrizePoolResult = await YieldSourceRewardsPool.deploy(
+  const yieldSourcePrizePool = await YieldSourceRewardsPool.deploy(
     deployer,
     mockYieldSource.address
   );
+  await yieldSourcePrizePool.deployed();
   console.log(
-    chalk.green("yieldSourcePrizePool: ", yieldSourcePrizePoolResult.address)
+    chalk.green("yieldSourcePrizePool: ", yieldSourcePrizePool.address)
   );
   console.log(chalk.cyan("\nDeploying Pass..."));
   const Pass = await ethers.getContractFactory("Pass");
-  const passResult = await Pass.deploy(
+  const pass = await Pass.deploy(
     "Pass",
     "PASS",
     18,
-    yieldSourcePrizePoolResult.address
+    yieldSourcePrizePool.address
   );
-  console.log(chalk.green("PassResult: ", passResult.address));
+  await pass.deployed();
+  console.log(chalk.green("PassResult: ", pass.address));
 }
 
 // We recommend this pattern to be able to use async/await everywhere
