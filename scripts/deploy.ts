@@ -18,24 +18,24 @@ async function main() {
     chalk.yellow("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
   );
   console.log(
-    chalk.yellow("CAUTION: Deploying Prize Pool in a front-runnable way!")
+    chalk.yellow("CAUTION: Deploying Rewards Pool in a front-runnable way!")
   );
   console.log(chalk.cyan("\nDeploying MockYieldSource..."));
   const MockYieldSource = await ethers.getContractFactory("MockYieldSource");
   const mockYieldSource = await MockYieldSource.deploy("Yak", "YAK", 18);
   await mockYieldSource.deployed();
   console.log(chalk.green("mockYieldSource: ", mockYieldSource.address));
-  console.log(chalk.cyan("\nDeploying YieldSourcePrizePool..."));
+  console.log(chalk.cyan("\nDeploying YieldSourceRewardsPool..."));
   const YieldSourceRewardsPool = await ethers.getContractFactory(
-    "YieldSourcePrizePool"
+    "YieldSourceRewardsPool"
   );
-  const yieldSourcePrizePool = await YieldSourceRewardsPool.deploy(
-    deployer,
+  const yieldSourceRewardsPool = await YieldSourceRewardsPool.deploy(
+    await deployer.getAddress(),
     mockYieldSource.address
   );
-  await yieldSourcePrizePool.deployed();
+  await yieldSourceRewardsPool.deployed();
   console.log(
-    chalk.green("yieldSourcePrizePool: ", yieldSourcePrizePool.address)
+    chalk.green("yieldSourcePrizePool: ", yieldSourceRewardsPool.address)
   );
   console.log(chalk.cyan("\nDeploying Pass..."));
   const Pass = await ethers.getContractFactory("Pass");
@@ -43,7 +43,7 @@ async function main() {
     "Pass",
     "PASS",
     18,
-    yieldSourcePrizePool.address
+    yieldSourceRewardsPool.address
   );
   await pass.deployed();
   console.log(chalk.green("PassResult: ", pass.address));
