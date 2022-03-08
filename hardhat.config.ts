@@ -50,19 +50,19 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
       accounts: {
-        mnemonic,
+        mnemonic: mnemonic,
       },
     },
     arbitrum_rinkeby: {
       url: process.env.ARBITRUM_RINKEBY_URL || "",
       accounts: {
-        mnemonic,
+        mnemonic: mnemonic,
       },
     },
     bsct: {
       url: process.env.BSCT_URL || "",
       accounts: {
-        mnemonic,
+        mnemonic: mnemonic,
       },
     },
   },
