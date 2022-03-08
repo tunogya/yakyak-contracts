@@ -36,18 +36,18 @@ interface IPass is IControlledToken {
   event Delegated(address indexed delegator, address indexed delegate);
 
   /**
-   * @notice Emitted when ticket is initialized.
-     * @param name Ticket name (eg: YakYak Dai Ticket (Compound)).
-     * @param symbol Ticket symbol (eg: PcDAI).
-     * @param decimals Ticket decimals.
+   * @notice Emitted when pass is initialized.
+     * @param name Pass name (eg: YakYak Dai Pass (Compound)).
+     * @param symbol Pass symbol (eg: PcDAI).
+     * @param decimals Pass decimals.
      * @param controller Token controller address.
      */
-  event TicketInitialized(string name, string symbol, uint8 decimals, address indexed controller);
+  event PassInitialized(string name, string symbol, uint8 decimals, address indexed controller);
 
   /**
    * @notice Emitted when a new TWAB has been recorded.
-     * @param delegate The recipient of the ticket power (may be the same as the user).
-     * @param newTwab Updated TWAB of a ticket holder after a successful TWAB recording.
+     * @param delegate The recipient of the pass power (may be the same as the user).
+     * @param newTwab Updated TWAB of a pass holder after a successful TWAB recording.
      */
   event NewUserTwab(
     address indexed delegate,
@@ -56,13 +56,13 @@ interface IPass is IControlledToken {
 
   /**
    * @notice Emitted when a new total supply TWAB has been recorded.
-     * @param newTotalSupplyTwab Updated TWAB of tickets total supply after a successful total supply TWAB recording.
+     * @param newTotalSupplyTwab Updated TWAB of passes total supply after a successful total supply TWAB recording.
      */
   event NewTotalSupplyTwab(ObservationLib.Observation newTotalSupplyTwab);
 
   /**
-   * @notice Retrieves the address of the delegate to whom `user` has delegated their tickets.
-     * @dev Address of the delegate will be the zero address if `user` has not delegated their tickets.
+   * @notice Retrieves the address of the delegate to whom `user` has delegated their passes.
+     * @dev Address of the delegate will be the zero address if `user` has not delegated their passes.
      * @param user Address of the delegator.
      * @return Address of the delegate.
      */

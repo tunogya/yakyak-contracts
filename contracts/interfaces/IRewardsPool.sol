@@ -49,8 +49,8 @@ interface IRewardsPool {
   /// @dev Event emitted when the Rewards Strategy is set
   event PrizeStrategySet(address indexed prizeStrategy);
 
-  /// @dev Event emitted when the Ticket is set
-  event TicketSet(IPass indexed ticket);
+  /// @dev Event emitted when the Pass is set
+  event PassSet(IPass indexed pass);
 
   /// @dev Emitted when there was an error thrown awarding an External ERC721
   event ErrorAwardingExternalERC721(bytes error);
@@ -99,7 +99,7 @@ interface IRewardsPool {
   function balance() external returns (uint256);
 
   /**
-   * @notice Read internal Ticket accounted balance.
+   * @notice Read internal Pass accounted balance.
      * @return uint256 accountBalance
      */
   function getAccountedBalance() external view returns (uint256);
@@ -115,9 +115,9 @@ interface IRewardsPool {
   function getLiquidityCap() external view returns (uint256);
 
   /**
-   * @notice Read ticket variable
+   * @notice Read pass variable
      */
-  function getTicket() external view returns (IPass);
+  function getPass() external view returns (IPass);
 
   /**
    * @notice Read token variable
@@ -182,10 +182,10 @@ interface IRewardsPool {
   /// @param _prizeStrategy The new rewards strategy.
   function setPrizeStrategy(address _prizeStrategy) external;
 
-  /// @notice Set rewards pool ticket.
-  /// @param ticket Address of the ticket to set.
-  /// @return True if ticket has been successfully set.
-  function setTicket(IPass ticket) external returns (bool);
+  /// @notice Set rewards pool pass.
+  /// @param pass Address of the pass to set.
+  /// @return True if pass has been successfully set.
+  function setPass(IPass pass) external returns (bool);
 
   /// @notice Delegate the votes for a Compound COMP-like token held by the rewards pool
   /// @param compLike The COMP-like token held by the rewards pool that should be delegated

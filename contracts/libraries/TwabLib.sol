@@ -24,7 +24,7 @@ library TwabLib {
 
   /**
     * @notice Sets max ring buffer length in the Account.twabs Observation list.
-                As users transfer/mint/burn tickets new Observation checkpoints are
+                As users transfer/mint/burn passes new Observation checkpoints are
                 recorded. The current max cardinality guarantees a six month minimum,
                 of historical accurate lookups with current estimates of 1 new block
                 every 15 seconds - the of course contain a transfer to trigger an

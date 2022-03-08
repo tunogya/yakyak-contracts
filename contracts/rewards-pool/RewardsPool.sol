@@ -37,7 +37,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   /// @notice The Rewards Strategy that this Rewards Pool is bound to.
   address internal prizeStrategy;
 
-  /// @notice The total amount of tickets a user can hold.
+  /// @notice The total amount of pass a user can hold.
   uint256 internal balanceCap;
 
   /// @notice The total amount of funds that the rewards pool can hold.
@@ -92,7 +92,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
 
   /// @inheritdoc IRewardsPool
   function getAccountedBalance() external view override returns (uint256) {
-    return _ticketTotalSupply();
+    return _passTotalSupply();
   }
 
   /// @inheritdoc IRewardsPool
@@ -122,13 +122,13 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
 
   /// @inheritdoc IRewardsPool
   function captureAwardBalance() external override nonReentrant returns (uint256) {
-    uint256 ticketTotalSupply = _ticketTotalSupply();
+    uint256 passTotalSupply = _passTotalSupply();
     uint256 currentAwardBalance = _currentAwardBalance;
 
     // it's possible for the balance to be slightly less due to rounding errors in the underlying yield source
     uint256 currentBalance = _balance();
-    uint256 totalInterest = (currentBalance > ticketTotalSupply)
-    ? currentBalance - ticketTotalSupply
+    uint256 totalInterest = (currentBalance > passTotalSupply)
+    ? currentBalance - passTotalSupply
     : 0;
 
     uint256 unaccountedPrizeBalance = (totalInterest > currentAwardBalance)
@@ -166,22 +166,22 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     pass.controllerDelegateFor(msg.sender, _delegate);
   }
 
-  /// @notice Transfers tokens in from one user and mints tickets to another
+  /// @notice Transfers tokens in from one user and mints pass to another
   /// @notice _operator The user to transfer tokens from
-  /// @notice _to The user to mint tickets to
+  /// @notice _to The user to mint pass to
   /// @notice _amount The amount to transfer and mint
   function _depositTo(address _operator, address _to, uint256 _amount) internal
   {
     require(_canDeposit(_to, _amount), "RewardsPool/exceeds-balance-cap");
 
-    IPass _ticket = pass;
+    IPass _pass = pass;
 
     _token().safeTransferFrom(_operator, address(this), _amount);
 
-    _mint(_to, _amount, _ticket);
+    _mint(_to, _amount, _pass);
     _supply(_amount);
 
-    emit Deposited(_operator, _to, _ticket, _amount);
+    emit Deposited(_operator, _to, _pass, _amount);
   }
 
   /// @inheritdoc IRewardsPool
@@ -191,17 +191,17 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   nonReentrant
   returns (uint256)
   {
-    IPass _ticket = pass;
+    IPass _pass = pass;
 
-    // burn the tickets
-    _ticket.controllerBurnFrom(msg.sender, _from, _amount);
+    // burn the pass
+    _pass.controllerBurnFrom(msg.sender, _from, _amount);
 
-    // redeem the tickets
+    // redeem the pass
     uint256 _redeemed = _redeem(_amount);
 
     _token().safeTransfer(_from, _redeemed);
 
-    emit Withdrawal(msg.sender, _from, _ticket, _amount, _redeemed);
+    emit Withdrawal(msg.sender, _from, _pass, _amount, _redeemed);
 
     return _redeemed;
   }
@@ -220,11 +220,11 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     _currentAwardBalance = currentAwardBalance - _amount;
   }
 
-    IPass _ticket = pass;
+    IPass _pass = pass;
 
-    _mint(_to, _amount, _ticket);
+    _mint(_to, _amount, _pass);
 
-    emit Awarded(_to, _ticket, _amount);
+    emit Awarded(_to, _pass, _amount);
   }
 
   /// @inheritdoc IRewardsPool
@@ -380,7 +380,7 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
   function _canAddLiquidity(uint256 _amount) internal view returns (bool) {
     uint256 _liquidityCap = liquidityCap;
     if (_liquidityCap == type(uint256).max) return true;
-    return (_ticketTotalSupply() + _amount <= _liquidityCap);
+    return (_passTotalSupply() + _amount <= _liquidityCap);
   }
 
   /// @dev Checks if a specific token is controlled by the Rewards Pool
@@ -414,9 +414,9 @@ abstract contract RewardsPool is IRewardsPool, Ownable, ReentrancyGuard, IERC721
     emit PrizeStrategySet(_prizeStrategy);
   }
 
-  /// @notice The current total of tickets.
+  /// @notice The current total of pass.
   /// @return Pass total supply.
-  function _ticketTotalSupply() internal view returns (uint256) {
+  function _passTotalSupply() internal view returns (uint256) {
     return pass.totalSupply();
   }
 
